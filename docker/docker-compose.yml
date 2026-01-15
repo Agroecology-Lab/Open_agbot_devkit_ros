@@ -1,26 +1,32 @@
-version: "3.8"
+version: '3.9'
 
 services:
   basekit:
     build:
       context: ..
       dockerfile: docker/Dockerfile
-    image: basekit_ros:latest
-    network_mode: host # Required for ROS2 communication
-    privileged: true # Required for hardware access
-    devices:
-      - /dev/ttyTHS0:/dev/ttyTHS0 # Basekit serial port
-      - /dev/ttyACM0:/dev/ttyACM0 # GNSS receiver (USB ACM)
-      - /dev/video0:/dev/video0 # Camera main video stream
-      - /dev/video1:/dev/video1 # Camera metadata stream
-      - /dev/media1:/dev/media1 # Camera media controller
+    image: agroecology/open_agbot:latest
+    container_name: open_agbot_basekit
+    
+    # Required for hardware access (GPS/ESP32)
+    privileged: true
+    
+    # Required for ROS 2 Discovery and NiceGUI web access
+    network_mode: host
+    
+    # Mount hardware device nodes
     volumes:
-      - /dev:/dev # Access to all devices (alternative to individual mappings)
-      - ~/.ros:/root/.ros # For ROS logs
+      - /dev:/dev
+    
     environment:
-      - ROS_DOMAIN_ID=0 # Default ROS domain
-      - RMW_IMPLEMENTATION=rmw_cyclonedds_cpp # Using CycloneDDS
-
-    # Source and launch the basekit system
-    command: bash -c "source /opt/ros/humble/setup.bash && source /workspace/install/setup.bash && ros2 launch basekit_launch basekit.launch.py & tail -f /dev/null"
+      # Ensures the high-performance middleware we fixed is used
+      - RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+      # Prevents Python from buffering logs (see logs in real-time)
+      - PYTHONUNBUFFERED=1
+    
+    # Automatically restarts the bot if it crashes or the computer reboots
     restart: unless-stopped
+
+    # Optional: ensure udev is handled if the host has specific rules
+    # devices:
+    #   - /dev:/dev
