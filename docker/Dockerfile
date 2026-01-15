@@ -6,7 +6,7 @@ ENV VIRTUAL_ENV=/opt/agbot_venv
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 ENV PYTHONPATH="/root/.lizard:$PYTHONPATH"
 
-# 2. Resilient System Install (The "Nuclear" Loop)
+# 2. Resilient System Install (The Loop)
 RUN apt-get update && \
     for i in {1..10}; do \
     apt-get install -y --no-install-recommends \
@@ -43,5 +43,5 @@ RUN . /opt/ros/humble/setup.sh && \
     . install/setup.sh && \
     colcon build --symlink-install --parallel-workers 1
 
-# Note: Entrypoint is omitted here because your original Compose 
+# Note: Entrypoint is omitted here because Compose 
 # uses the 'command:' override to manage the launch sequence.
