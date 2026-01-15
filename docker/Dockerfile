@@ -24,6 +24,7 @@ RUN for i in {1..5}; do apt-get update && break || sleep 5; done && \
     # ROS Build Tools
     python3-colcon-common-extensions \
     # Required ROS 2 Humble Packages
+    ros-humble-rtcm-msgs \
     ros-humble-usb-cam \
     ros-humble-xacro \
     ros-humble-nmea-msgs \
