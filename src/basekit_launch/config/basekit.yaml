@@ -13,6 +13,12 @@ controller:
       list:
       - v_batt
       - motor_status
+      motor_status:
+        default: 0
+        type: int
+      v_batt:
+        default: 0.0
+        type: float
     robot_type: lizard
     use_lizard: true
 tf_base_link_imu:
