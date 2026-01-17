@@ -1,61 +1,63 @@
 /**:
   ros__parameters:
-    use_axis_camera: false # DISABLED to prevent ThinkPad crash
-    hw_platform: "laptop"  # Helps driver skip Jetson-specific GPIO
-
-# ESP32 / Lizard Driver Node
+    hw_platform: laptop
+    use_axis_camera: false
 controller:
   ros__parameters:
-    # --- THINKPAD FIX ---
-    port: "/dev/ttyACM0" 
+    base_frame: base_link
     baudrate: 115200
-    
-    # --- IMPORTANT: KEEP THESE ---
-    use_lizard: true
-    robot_type: "lizard"
+    odom_frame: odom
+    port: /dev/ttyACM1
     publish_tf: true
-    base_frame: "base_link"
-    odom_frame: "odom"
-
-# U-blox GPS Node
+    read_data:
+      list:
+      - v_batt
+      - motor_status
+    robot_type: lizard
+    use_lizard: true
+tf_base_link_imu:
+  ros__parameters:
+    rotation:
+    - 0.0
+    - 0.0
+    - 0.0
+    - 1.0
+    translation:
+    - 0.0
+    - 0.0
+    - 0.0
+tf_imu_gnss:
+  ros__parameters:
+    rotation:
+    - 0.0
+    - 0.0
+    - 0.0
+    - 1.0
+    translation:
+    - 0.0
+    - 0.0
+    - 0.0
 ublox_gps_node:
   ros__parameters:
-    # --- THINKPAD FIX ---
-    device: "/dev/ttyACM1"
-    
-    # --- IMPORTANT: KEEP THESE FOR RTK ---
-    uart1:
-      baudrate: 460800
-    frame_id: "gps"
+    device: /dev/ttyACM1
+    dgnss_mode: 3
+    frame_id: gps
     gnss:
-      gps: true
-      glonass: true
-      galileo: true
       beidou: true
+      galileo: true
+      glonass: true
+      gps: true
     inf:
-      all: true # Log all info for debugging RTK fix
+      all: true
+    meas: 5
     publish:
       all: true
       nav:
         pvt: true
         sat: true
-    # Accuracy settings
-    meas: 5
-    dgnss_mode: 3 # RTK Fixed/Float mode
-
-# Web UI
+    uart1:
+      baudrate: 460800
 web_ui:
   ros__parameters:
-    host: "0.0.0.0"
+    host: 0.0.0.0
     port: 8080
-
-# Static transforms (Required for Navigation stack)
-tf_base_link_imu:
-  ros__parameters:
-    translation: [0.0, 0.0, 0.0]
-    rotation: [0.0, 0.0, 0.0, 1.0]
-
-tf_imu_gnss:
-  ros__parameters:
-    translation: [0.0, 0.0, 0.0]
-    rotation: [0.0, 0.0, 0.0, 1.0]

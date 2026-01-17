@@ -5,42 +5,26 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile
-    restart: always
+    privileged: true
     network_mode: host
     ipc: host
-    privileged: true
-    
-    # Environment variables for ROS 2 and the Web UI
     environment:
       - DISPLAY=${DISPLAY}
-      - ROS_DOMAIN_ID=0
       - PYTHONUNBUFFERED=1
-      - RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
-
-    # Mount the local workspace so code changes sync immediately
     volumes:
       - ../:/workspace
       - /dev:/dev
-      # Shared memory for fast ROS 2 communication
-      - /dev/shm:/dev/shm
-
-    # Hardware access for ThinkPad USB ports
+    # We explicitly map the serial ports
     devices:
-      - /dev/ttyACM0:/dev/ttyACM0
-      - /dev/ttyACM1:/dev/ttyACM1
-
-    # This 'Safe Launch' logic bypasses the image entrypoint to ensure 
-    # we don't crash if the build folder is missing or being wiped.
+      - "/dev/ttyACM0:/dev/ttyACM0"
+      - "/dev/ttyACM1:/dev/ttyACM1"
     command: >
       /bin/bash -c "
       source /opt/ros/humble/setup.bash &&
       if [ ! -f '/workspace/install/setup.bash' ]; then
-        echo '🛑 [WAITING] install/setup.bash not found. The build script is likely still running...';
+        echo '🛑 Build not found. Waiting...';
         sleep infinity;
       else
-        echo '🚀 [STARTING] Sourcing workspace and launching AgBot...';
         source /workspace/install/setup.bash &&
         ros2 launch basekit_launch basekit.launch.py
       fi"
-
-# Use host network so the Web UI on 8080 is accessible at http://localhost:8080

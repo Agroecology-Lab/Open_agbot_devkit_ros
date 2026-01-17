@@ -15,11 +15,6 @@ setup(
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='root',
-    maintainer_email='root@todo.todo',
-    description='AgBot Web UI',
-    license='TODO: License declaration',
-    tests_require=['pytest'],
     entry_points={
         'console_scripts': [
             'basekit_ui_node = basekit_ui.ui_node:main'

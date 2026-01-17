@@ -1,9 +1,0 @@
-cmake_minimum_required(VERSION 3.8)
-project(basekit_ui)
-
-find_package(ament_cmake_python REQUIRED)
-
-# This tells the build system to use setup.py for the Python logic
-ament_python_install_package(${PROJECT_NAME})
-
-ament_package()
