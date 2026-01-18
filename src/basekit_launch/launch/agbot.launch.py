@@ -1,50 +1,45 @@
+import os
+from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch_ros.actions import Node
-from launch.actions import TimerAction
 
 def generate_launch_description():
+    # 1. Path to the Driver Configuration file
+    # This file contains the 'read_data' definitions that were causing the crash
+    driver_config = os.path.join(
+        get_package_share_directory('basekit_driver'),
+        'config',
+        'basekit_driver.yaml'
+    )
+
+    # 2. Path to the U-Blox Configuration file
+    ublox_config = os.path.join(
+        get_package_share_directory('basekit_launch'),
+        'config',
+        'ublox.yaml'
+    )
+
+    # 3. U-Blox GPS Node
+    ublox_gps_node = Node(
+        package='ublox_gps',
+        executable='ublox_gps_node',
+        name='ublox_gps_node',
+        namespace='',
+        parameters=[ublox_config],
+        output='screen'
+    )
+
+    # 4. Basekit Driver Node (The Motor Controller)
+    # We pass the driver_config here to fix the ParameterNotDeclaredException
+    basekit_driver_node = Node(
+        package='basekit_driver',
+        executable='basekit_driver_node',
+        name='basekit_driver_node',
+        output='screen',
+        parameters=[driver_config]
+    )
+
     return LaunchDescription([
-        # 1. GPS Node
-        Node(
-            package='ublox_gps',
-            executable='ublox_gps_node',
-            name='ublox_gps_node',
-            parameters=[{
-                'device': '/dev/ttyACM0',
-                'uart1/baudrate': 9600,
-                'frame_id': 'gps',
-                'nav_rate': 1,
-                'tmode3': 0
-            }],
-            respawn=True
-        ),
-        
-        # 2. Basekit Driver
-        TimerAction(period=3.0, actions=[
-            Node(
-                package='basekit_driver',
-                executable='basekit_driver_node',
-                name='basekit_driver_node',
-                parameters=[{
-                    'serial_port': '/dev/ttyACM1',
-                    'read_data.list': ['odom', 'bms', 'bumper'],
-                    'read_data.odom.type': 'json',
-                    'read_data.odom.default': '',
-                    'read_data.bms.type': 'json',
-                    'read_data.bms.default': '',
-                    'read_data.bumper.type': 'json',
-                    'read_data.bumper.default': ''
-                }],
-                output='screen',
-                respawn=True
-            )
-        ]),
-        
-        # 3. Web UI Node
-        Node(
-            executable='python3',
-            arguments=['/workspace/src/basekit_ui/basekit_ui/ui_node.py'],
-            name='web_ui',
-            output='screen'
-        )
+        ublox_gps_node,
+        basekit_driver_node
     ])

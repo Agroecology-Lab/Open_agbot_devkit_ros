@@ -1,4 +1,4 @@
-import rclpy
+#!/usr/bin/env python3
 from rclpy.node import Node
 from sensor_msgs.msg import NavSatFix
 from nicegui import app, ui
