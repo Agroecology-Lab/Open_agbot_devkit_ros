@@ -19,12 +19,67 @@ The workspace is organized to manage hardware drivers, user interfaces, and syst
 
 ## Installation and Setup
 
-1. Clone the repository to your local machine:
+Clone the repository to your local machine:
+   ```
    git clone https://github.com/Agroecology-Lab/Open_agbot_devkit_ros.git
    cd Open_agbot_devkit_ros
+   ```
+---
 
-2. Initialize the workspace and build the containers:
-   python3 openagbotquick.py --clean
+## Quick Start Sequence
+
+Follow these steps to initialize the robot:
+
+1. **Connect Hardware:** Plug in the u-blox GPS and ESP32 MCU via USB.
+2. **Scan and Map:**
+   ```
+   python3 fixusb.py
+   ```
+
+3. **Initial Setup**
+Run once on new systems. This is the automated installer designed to configure a fresh Linux installation for the Agbot environment.
+
+* **Function:** Checks for and installs system-level dependencies (Docker, Git, Python3, Pip) and pulls the latest base images from Docker Hub.
+* **Output:** Configures user groups (adding the user to 'docker' and 'dialout') and initializes the ROS 2 workspace structure.
+* **Usage:** `
+```
+python3 openagbotquick.py
+```
+
+4 **Launch Stack:**
+```
+python3 openagbot-dev.py
+```
+
+5 **Access UI: Open a web browser on the host machine and navigate to http://localhost:8080.**
+   
+
+# Open Agbot Helper Scripts detail
+
+Use these scripts to manage the hardware-to-software bridge on your host machine.
+
+### 1. fixusb.py (Hardware Mapping)
+**Run this first.** This script prevents the common issue where Linux swaps the port assignments (/dev/ttyACM0 vs /dev/ttyACM1) between the GPS and MCU.
+
+* **Function:** Identifies hardware via unique Vendor (VID) and Product (PID) IDs.
+* **Output:** Generates a .env file for Docker and fixes serial permissions (chmod 666).
+* **Usage:** `python3 fixusb.py`
+
+
+### 2. openagbot-dev.py (Developer Entry)
+**Primary daily workflow.** This script bridges your local environment to the ROS 2 Humble container.
+
+* **Function:** Mounts the local /src directory for live coding and forwards X11/GUI for tools like Rviz2 and Foxglove.
+* **Output:** Compiles the workspace and launches the full ROS 2 stack (GPS, Controller, and UI nodes).
+* **Usage:** `python3 openagbot-dev.py`
+
+### 3. cleanstart.sh (Deep Reset)
+**System Reset.** Use this if the environment becomes unstable or if build artifacts conflict after major code changes.
+
+* **Function:** Performs a deep clean of the workspace and Docker daemon.
+* **Output:** Deletes build, install, and log folders and prunes stale Docker layers before initiating a fresh build.
+* **Usage:** `./cleanstart.sh`
+
 
 ## Components
 
