@@ -1,0 +1,11 @@
+/**:
+  ros__parameters:
+    serial_port: "/dev/ttyACM1"
+    read_data:
+      list: ["v_batt", "motor_status"]
+      v_batt:
+        type: "json"
+        default: ""
+      motor_status:
+        type: "json"
+        default: ""

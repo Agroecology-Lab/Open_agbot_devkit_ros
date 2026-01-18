@@ -1,38 +1,38 @@
 import rclpy
 from rclpy.node import Node
-from nicegui import ui
-import threading
-import sys
+from sensor_msgs.msg import NavSatFix
+from nicegui import app, ui
 
-class NiceGuiNode(Node):
+class AgBotUI(Node):
     def __init__(self):
         super().__init__('web_ui')
+        self.lat = 0.0
+        self.lon = 0.0
+        self.create_subscription(NavSatFix, '/ublox_gps_node/fix', self.gps_cb, 10)
+
+    def gps_cb(self, msg):
+        self.lat = msg.latitude
+        self.lon = msg.longitude
+
+def main():
+    if not rclpy.ok():
+        rclpy.init()
+    
+    ros_node = AgBotUI()
+
+    @ui.page('/')
+    def index():
+        ui.dark_mode().enable()
+        ui.label('AgBot Live Telemetry').classes('text-h4 mb-4')
+        with ui.card().classes('w-64'):
+            ui.label('GPS Status').classes('text-subtitle1 text-grey')
+            ui.label().bind_text_from(ros_node, 'lat', backward=lambda x: f'Lat: {x:.6f}')
+            ui.label().bind_text_from(ros_node, 'lon', backward=lambda x: f'Lon: {x:.6f}')
         
-        @ui.page('/')
-        def main_page():
-            ui.dark_mode().enable()
-            with ui.column().classes('w-full items-center q-pa-md'):
-                ui.label('AgBot Control Panel').classes('text-h3 text-primary font-bold')
-                
-                with ui.card().classes('q-pa-lg bg-grey-9'):
-                    ui.label('System Status').classes('text-h5 text-white')
-                    ui.separator()
-                    ui.label('GPS: Connected').classes('text-green text-subtitle1')
-                    ui.label('MCU: Connected').classes('text-green text-subtitle1')
-                    
-                ui.button('TEST ROS LOG', 
-                          on_click=lambda: self.get_logger().info('NiceGUI interaction success!'),
-                          color='primary').classes('q-mt-md')
+        # Move the timer inside the page or app context
+        ui.timer(0.1, lambda: rclpy.spin_once(ros_node, timeout_sec=0))
 
-def main(args=None):
-    rclpy.init(args=args)
-    node = NiceGuiNode()
-    
-    # Run ROS in background
-    threading.Thread(target=lambda: rclpy.spin(node), daemon=True).start()
-    
-    # Start web server
-    ui.run(port=8080, show=False, reload=False)
+    ui.run(port=8080, show=False, reload=False, title="AgBot")
 
-if __name__ == '__main__':
+if __name__ in {"__main__", "__mp_main__"}:
     main()

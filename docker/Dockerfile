@@ -65,3 +65,7 @@ RUN echo "source /opt/ros/humble/setup.bash" >> /root/.bashrc && \
 RUN mkdir -p /opt/lizard && cp -r /root/.lizard/* /opt/lizard/ || true
 RUN chmod -R 755 /opt/lizard
 CMD ["/bin/bash"]
+
+# Source the workspace
+RUN echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc
+RUN echo "source /home/user/open_agbot_ws/install/setup.bash" >> ~/.bashrc
