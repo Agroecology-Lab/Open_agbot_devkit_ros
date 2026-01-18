@@ -46,12 +46,12 @@ Run once on new systems. This is the automated installer designed to configure a
 python3 openagbotquick.py
 ```
 
-4 **Launch Stack:**
+4. **Launch Stack:**
 ```
 python3 openagbot-dev.py
 ```
 
-5 **Access UI: Open a web browser on the host machine and navigate to http://localhost:8080.**
+5. **Access UI: Open a web browser on the host machine and navigate to http://localhost:8080.**
    
 
 # Open Agbot Helper Scripts detail
@@ -79,6 +79,28 @@ Use these scripts to manage the hardware-to-software bridge on your host machine
 * **Function:** Performs a deep clean of the workspace and Docker daemon.
 * **Output:** Deletes build, install, and log folders and prunes stale Docker layers before initiating a fresh build.
 * **Usage:** `./cleanstart.sh`
+
+### 4. .Git Automation Helper (`git.sh`)
+
+The `git.sh` script is a utility designed to standardize the workflow for the Open Agbot DevKit, ensuring consistent branch management and conflict prevention
+
+**Push to the main branch:**
+```
+./git.sh your commit message
+```
+
+**Push to the dev branch:**
+
+```
+./git.sh -dev your commit message
+```
+
+
+### Quick Start
+
+**Push to the main branch:**
+```bash
+./git.sh "Fixed motor controller timeout"
 
 
 ## Components
