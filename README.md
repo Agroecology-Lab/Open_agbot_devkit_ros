@@ -31,7 +31,7 @@ Clone the repository to your local machine:
 
 Follow these steps to initialize the robot:
 
-1. **Connect Hardware:** Plug in the u-blox GPS and ESP32 MCU via US   ```
+1. **Connect Hardware:** Plug in the u-blox GPS and ESP32 MCU via USB
 
 2. **Initial Setup**
 Run once on new systems. This is the automated installer designed to configure a fresh Linux installation for the Agbot environment.
