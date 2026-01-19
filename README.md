@@ -23,6 +23,7 @@ Clone the repository to your local machine:
    ```
    git clone https://github.com/Agroecology-Lab/Open_agbot_devkit_ros.git
    cd Open_agbot_devkit_ros
+   docker build --network=host -t openagbot-basekit:latest -f docker/Dockerfile .
    ```
 ---
 
@@ -48,7 +49,7 @@ python3 openagbotquick.py
 python3 openagbot-dev.py
 ```
 
-5. Access UI: Open a web browser on the host machine and navigate to http://localhost:8080.
+5. **Access UI:** Open a web browser on the host machine and navigate to http://localhost:8080.
    
 
 # Open Agbot Helper Scripts detail
@@ -81,12 +82,12 @@ Use these scripts to manage the hardware-to-software bridge on your host machine
 
 The `git.sh` script is a utility designed to standardize the workflow for the Open Agbot DevKit, ensuring consistent branch management and conflict prevention
 
-**Push to the main branch:**
+**Push to your main branch:**
 ```
 ./git.sh your commit message
 ```
 
-**Push to the dev branch:**
+**Push to your dev branch:**
 
 ```
 ./git.sh -dev your commit message
