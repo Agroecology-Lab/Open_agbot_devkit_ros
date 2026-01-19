@@ -23,9 +23,8 @@ Clone the repository to your local machine:
    ```
    git clone https://github.com/Agroecology-Lab/Open_agbot_devkit_ros.git
    cd Open_agbot_ws
-   docker build --network=host -t openagbot-basekit:latest -f docker/Dockerfile .
+   docker build --no-cache -t openagbot:dev -f docker/Dockerfile .
    ```
----
 
 ## Quick Start 
 
@@ -37,12 +36,12 @@ Follow these steps to initialize the robot:
 Run once on new systems. This is the automated installer designed to configure a fresh Linux installation for the Agbot environment.
 
 ```
-python3 openagbotquick.py
+python3 firstrun.py
 ```
 
 3. **Launch Stack:**
 ```
-python3 openagbot-dev.py
+python3 manage.py
 ```
 
 4. **Access UI:** Open a web browser on the host machine and navigate to http://localhost:8080.
