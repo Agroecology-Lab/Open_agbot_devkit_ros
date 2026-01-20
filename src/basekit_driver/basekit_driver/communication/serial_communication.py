@@ -1,3 +1,4 @@
+import os
 #!/usr/bin/env python3
 """ Copyright (c) 2024 Leibniz-Institut für Agrartechnik und Bioökonomie e.V. (ATB)
     Modified by Zauberzeug GmbH
@@ -50,7 +51,7 @@ class SerialCommunication(Communication):
         self._logger.info('Init serial communication')
 
         # Get serial port from parameter
-        node.declare_parameter('serial_port', '/dev/ttyTHS0')
+        node.declare_parameter('serial_port', os.environ.get('MCU_PORT', '/dev/ttyACM0'))
         self._serial_port = node.get_parameter('serial_port').value
         self._logger.info('Using serial port: ' + self._serial_port)
 

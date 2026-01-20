@@ -1,11 +1,11 @@
 rdyp = Output(15)
-en3 = Output(12)
-bluetooth = Bluetooth("Basekit")
-can = Can(32, 33, 1000000)
-l0 = ODriveMotor(can, 0, 6)
-r0 = ODriveMotor(can, 512, 6)
-l1 = ODriveMotor(can, 256, 6)
-r1 = ODriveMotor(can, 768, 6)
+// en3 = Output(12)
+// bluetooth = Bluetooth("Basekit")
+// // can = Can(8, 9, 1000000)
+// l0 = ODriveMotor(can, 0, 6)
+// r0 = ODriveMotor(can, 512, 6)
+// l1 = ODriveMotor(can, 256, 6)
+// r1 = ODriveMotor(can, 768, 6)
 
 # wheel_diameter * pi / motor_gear_ratio
 l0.m_per_tick = 0.03953674121405751

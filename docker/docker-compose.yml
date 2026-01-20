@@ -1,17 +1,33 @@
+version: '3.8'
+
 services:
-  # The AgBot ROS Application
   agbot:
     image: openagbot:dev
     container_name: openagbot_app
     network_mode: host
     privileged: true
+    # Resource limits to prevent the "GPS Unplugged" infinite loop from freezing the ThinkPad
+    deploy:
+      resources:
+        limits:
+          cpus: '1.5'  # Caps total container usage to 150% (75% of 2 cores)
+    # Loads the GPS_PORT and MCU_PORT from your .env file
+    env_file:
+      - .env
     volumes:
       - /dev:/dev
       - .:/open_agbot_ws  # Bind mount for dev-mode
     environment:
       - RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
       - MONGO_HOST=localhost
-    command: bash -c "source install/setup.bash && ros2 launch basekit_launch basekit_launch.py"
+      - GPS_PORT=${GPS_PORT}
+      - MCU_PORT=${MCU_PORT}
+    # Passing variables directly to the ROS2 launch system
+    command: >
+      bash -c "source install/setup.bash && 
+      ros2 launch basekit_launch basekit_launch.py 
+      gps_port:=$GPS_PORT 
+      mcu_port:=$MCU_PORT"
     depends_on:
       - mongodb
 

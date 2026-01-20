@@ -1,3 +1,4 @@
+import os
 #!/usr/bin/env python3
 
 """ Copyright (c) 2024 Leibniz-Institut für Agrartechnik und Bioökonomie e.V. (ATB)
@@ -26,7 +27,7 @@ class BasekitDriver(Node):
 
         # Declare parameters
         self.declare_parameter('startup_file', '')
-        self.declare_parameter('port', '/dev/ttyTHS0')
+        self.declare_parameter('port', os.environ.get('MCU_PORT', '/dev/ttyACM0'))
 
         self._serial_communication = SerialCommunication(self)
         self._odom_handler = OdomHandler(self, self._serial_communication)

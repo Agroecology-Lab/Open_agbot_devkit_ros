@@ -1,20 +1,36 @@
-
 services:
-  open-agbot:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile
-    container_name: open-agbot-main
-    privileged: true
+  agbot:
+    image: openagbot:dev
+    container_name: openagbot_app
     network_mode: host
-    ipc: host
-    pid: host
-    devices:
-      - "/dev/ttyUSB0:/dev/ttyUSB0"
-      - "/dev/ttyACM0:/dev/ttyACM0"
-    deploy:
-      resources:
-        limits:
-          cpus: '6.0'
-          memory: 3000M
+    privileged: true
+    env_file:
+      - .env
+    volumes:
+      - /dev:/dev
+      - .:/open_agbot_ws
+    environment:
+      - GPS_PORT=${GPS_PORT}
+      - MCU_PORT=${MCU_PORT}
+      - USER_ID=${USER_ID}
+      - GROUP_ID=${GROUP_ID}
+      - RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+      - MONGO_HOST=localhost
+    command: >
+      bash -c "source install/setup.bash && 
+      ros2 launch basekit_launch basekit_launch.py 
+       
+      "
+    depends_on:
+      - mongodb
+
+  mongodb:
+    image: mongo:6.0
+    container_name: agbot_db
+    network_mode: host
+    volumes:
+      - mongodb_data:/data/db
     restart: always
+
+volumes:
+  mongodb_data:

@@ -36,8 +36,8 @@ if args.swap_pins:
     GPIO_EN, GPIO_G0 = GPIO_G0, GPIO_EN
 DEVICE = {
     'nano': '/dev/ttyTHS1',
-    'xavier': '/dev/ttyTHS0',
-    'orin': '/dev/ttyTHS0',
+    'xavier': '/dev/ttyACM0',
+    'orin': '/dev/ttyACM0',
 }.get(args.jetson, args.device)
 ON = 1 if args.nand else 0
 OFF = 0 if args.nand else 1
