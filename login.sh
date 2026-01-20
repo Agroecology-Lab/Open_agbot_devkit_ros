@@ -9,7 +9,7 @@ if ! docker info >/dev/null 2>&1; then
 fi
 
 # 2. Try to find the specific ID
-RAW_PS=$(docker ps | grep "openagbot-basekit")
+RAW_PS=$(docker ps | grep "openagbot:dev")
 echo "DEBUG: grep result: $RAW_PS"
 
 CONTAINER_ID=$(echo "$RAW_PS" | awk '{print $1}' | head -n 1)

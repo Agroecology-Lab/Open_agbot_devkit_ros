@@ -1,9 +1,11 @@
 basekit_driver_node:
   ros__parameters:
+    port: "/dev/ttyACM1"
+    baudrate: 115200
     read_data:
-      list: ["odom", "bms", "bumper"]
-      odom: {default: 0.0}
-      bms: {default: 0.0}
-      bumper: {default: 0.0}
-    serial_port: "/dev/ttyACM1"
-    baud_rate: 115200
+      odom:
+        type: "string"
+      bms:
+        type: "string"
+      bumper:
+        type: "string"
