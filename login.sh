@@ -1,28 +1,23 @@
 #!/bin/bash
 
-echo "--- Debugging AgBot Login ---"
+# Find the ID of the most recent container running the openagbot:dev image
+CONTAINER_ID=$(docker ps -q --filter "ancestor=openagbot:dev" | head -n 1)
 
-# 1. Check if Docker is even running
-if ! docker info >/dev/null 2>&1; then
-    echo "❌ ERROR: Docker daemon is not running or no permissions."
-    exit 1
-fi
-
-# 2. Try to find the specific ID
-RAW_PS=$(docker ps | grep "openagbot-basekit")
-echo "DEBUG: grep result: $RAW_PS"
-
-CONTAINER_ID=$(echo "$RAW_PS" | awk '{print $1}' | head -n 1)
-echo "DEBUG: Extracted ID: $CONTAINER_ID"
-
-# 3. Final check and execution
 if [ -z "$CONTAINER_ID" ]; then
-    echo "❌ FAIL: No container found with image 'openagbot-basekit'."
-    echo "Current running containers:"
-    docker ps --format "table {{.ID}}\t{{.Image}}\t{{.Names}}"
+    echo "------------------------------------------------------"
+    echo "❌ ERROR: No running AgBot container found."
+    echo "Make sure you have started the robot with: python3 manage.py"
+    echo "------------------------------------------------------"
     exit 1
 fi
 
-echo "🚀 SUCCESS: Entering AgBot [$CONTAINER_ID]..."
-echo "-------------------------------------------"
-docker exec -it "$CONTAINER_ID" /bin/bash
+# Get the name of the container for a prettier display
+NAME=$(docker inspect --format '{{.Name}}' $CONTAINER_ID | sed 's/\///')
+
+echo "------------------------------------------------------"
+echo "✅ Found AgBot Container: $NAME ($CONTAINER_ID)"
+echo "🚀 Entering Bash environment..."
+echo "------------------------------------------------------"
+
+# Enter the container with an interactive bash shell
+docker exec -it $CONTAINER_ID bash
