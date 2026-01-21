@@ -33,13 +33,11 @@ python3 manage.py
 ### manage.py
 The primary entry point for the system. While it runs the full stack by default, it supports several optional arguments for development:
 
-| Argument | Description |
-| :--- | :--- |
-| (no args) | Standard mode: Detects hardware, builds workspace, and launches the stack. |
-| build | Rebuilds the ROS 2 workspace (colcon build) before launching. |
-| pkg <name> | Builds only the specified package. |
-| debug | Launches containers in the foreground with verbose logging. |
-| clean | Removes build, install, and log directories before starting. |
+| Argument | Behaviour / Implementation                                                                 |
+| :------- | :----------------------------------------------------------------------------------------- |
+| (None)   | Runs fixusb.py, then executes docker compose up -d to immediately start the stack.         |
+| build    | Executes docker compose build to compile the devkit images.                                |
+| down     | Executes docker compose down to stop and remove the containers and networks.               |
 
 
 - Auto-Detects Hardware: Identifies the real USB paths for the GPS and MCU on the host, so you don't have to guess if they are ACM0 or ACM2.
