@@ -1,141 +1,75 @@
 #!/usr/bin/env python3
-import os
-import subprocess
-import re
-import time
-import curses
+import os, subprocess, re, time, curses
 
 # --- Configuration ---
 EXPECTED_NODES = ["/basekit_driver_node", "/ublox_gps_node", "/basekit_ui_node"]
-PRIORITY_TOPICS = {
-    "/ublox_gps_node/fix": "GPS Fix",
-    "/battery_state": "Battery",
-    "/odom": "Odometry",
-    "/cmd_vel": "Cmd Vel"
-}
-SERIAL_PORTS = ["/dev/ttyACM0", "/dev/ttyACM1", "/dev/ttyACM2"]
+TARGET_TOPICS = ["/fix", "/diagnostics", "/odom", "/cmd_vel"]
+SERIAL_MAP = {"/dev/ttyACM0": "ESP32 MCU", "/dev/ttyACM2": "ZED-F9P GPS"}
 
-def run_ros_cmd(cmd):
+def run_cmd(cmd):
     try:
-        full_cmd = (
-            "source /opt/ros/humble/setup.bash && "
-            "[ -f /open_agbot_ws/install/setup.bash ] && "
-            "source /open_agbot_ws/install/setup.bash; "
-            f"{cmd}"
-        )
-        return subprocess.check_output(
-            full_cmd, shell=True, executable="/bin/bash", stderr=subprocess.DEVNULL
-        ).decode().strip()
-    except:
-        return None
+        full_cmd = f"source /opt/ros/humble/setup.bash && [ -f /open_agbot_ws/install/setup.bash ] && source /open_agbot_ws/install/setup.bash; {cmd}"
+        return subprocess.check_output(full_cmd, shell=True, executable="/bin/bash", stderr=subprocess.DEVNULL).decode().strip()
+    except: return None
 
-def get_serial_details():
-    details = {}
-    for dev in SERIAL_PORTS:
-        if os.path.exists(dev):
-            try:
-                fuser_out = subprocess.check_output(["fuser", dev], stderr=subprocess.DEVNULL).decode().strip()
-                pid = fuser_out.split()[-1] if fuser_out else None
-                details[dev] = {"status": "BUSY", "pid": pid} if pid else {"status": "AVAILABLE", "pid": None}
-            except Exception:
-                details[dev] = {"status": "AVAILABLE", "pid": None}
-        else:
-            details[dev] = {"status": "MISSING", "pid": None}
-    return details
-
-def draw_uber_dashboard(stdscr):
+def draw(stdscr):
     curses.start_color()
     curses.use_default_colors()
     curses.init_pair(1, curses.COLOR_GREEN, -1)
     curses.init_pair(2, curses.COLOR_RED, -1)
     curses.init_pair(3, curses.COLOR_CYAN, -1)
-    curses.init_pair(4, curses.COLOR_YELLOW, -1)
+    curses.curs_set(0); stdscr.nodelay(True); stdscr.timeout(100)
     
-    curses.curs_set(0)
-    stdscr.nodelay(True)  # Make getch non-blocking
-    stdscr.timeout(100)   # Wait 100ms for input, then continue
-
-    last_update = 0
-    hw_info = {}
-    nodes_raw = ""
-    all_topics = ""
-    topic_stats = {}
-
+    topic_data = {}
     while True:
-        # Only update heavy data every 2 seconds to keep UI responsive
-        current_time = time.time()
-        if current_time - last_update > 2.0:
-            hw_info = get_serial_details()
-            nodes_raw = run_ros_cmd("ros2 node list") or ""
-            all_topics = run_ros_cmd("ros2 topic list") or ""
-            
-            for topic in PRIORITY_TOPICS:
-                if topic in all_topics:
-                    hz_raw = run_ros_cmd(f"timeout 0.5s ros2 topic hz {topic}")
-                    rate = re.findall(r"average rate: ([\d.]+)", hz_raw) if hz_raw else None
-                    topic_stats[topic] = f"{rate[0]} Hz" if rate else "Streaming..."
-                else:
-                    topic_stats[topic] = "Offline"
-            last_update = current_time
-
+        nodes = run_cmd("ros2 node list") or ""
+        topics = run_cmd("ros2 topic list") or ""
         stdscr.clear()
-        height, width = stdscr.getmaxyx()
-
-        if height < 18 or width < 50:
-            stdscr.addstr(0, 0, "WINDOW TOO SMALL", curses.color_pair(2))
-        else:
-            try:
-                # Header
-                stdscr.attron(curses.color_pair(3) | curses.A_BOLD)
-                stdscr.addstr(0, 0, " 🚀 AGBOT MISSION CONTROL ".center(width, "="))
-                stdscr.attroff(curses.color_pair(3) | curses.A_BOLD)
-
-                # Hardware
-                stdscr.addstr(2, 2, "SERIAL HARDWARE", curses.A_UNDERLINE)
-                for i, (dev, data) in enumerate(hw_info.items()):
-                    row = 3 + i
-                    if data["status"] == "AVAILABLE":
-                        stdscr.addstr(row, 4, "[✓]", curses.color_pair(1))
-                        stdscr.addstr(row, 8, f"{dev}: Available")
-                    elif data["status"] == "BUSY":
-                        stdscr.addstr(row, 4, "[❗]", curses.color_pair(4))
-                        stdscr.addstr(row, 8, f"{dev}: BUSY (PID {data['pid']})", curses.color_pair(2))
-                    else:
-                        stdscr.addstr(row, 4, "[✗]", curses.color_pair(2))
-                        stdscr.addstr(row, 8, f"{dev}: NOT FOUND")
-
-                # Nodes
-                stdscr.addstr(7, 2, "ACTIVE NODES", curses.A_UNDERLINE)
-                for i, node in enumerate(EXPECTED_NODES):
-                    color = curses.color_pair(1) if node in nodes_raw else curses.color_pair(2)
-                    char = "[✓]" if node in nodes_raw else "[✗]"
-                    stdscr.addstr(8 + i, 4, char, color)
-                    stdscr.addstr(8 + i, 8, f"{node}")
-
-                # Topics
-                stdscr.addstr(12, 2, "TOPIC HEALTH", curses.A_UNDERLINE)
-                row = 13
-                for topic, label in PRIORITY_TOPICS.items():
-                    status_val = topic_stats.get(topic, "Loading...")
-                    color = curses.color_pair(1) if "Hz" in status_val or "Stream" in status_val else curses.color_pair(2)
-                    stdscr.addstr(row, 4, f"{label:<12} | {status_val}", color)
-                    row += 1
-
-                # Footer
-                footer_text = f" Press 'q' to Exit | Last Update: {time.strftime('%H:%M:%S')} "
-                stdscr.addstr(height-1, 0, footer_text.center(width, "-"))
-            except curses.error:
-                pass
-
-        stdscr.refresh()
+        stdscr.addstr(0, 0, "🚀 AGBOT MISSION CONTROL (INTERNAL)", curses.color_pair(3) | curses.A_BOLD)
         
-        # Capture input
-        key = stdscr.getch()
-        if key == ord('q') or key == ord('Q'):
-            break
+        # --- Nodes Section ---
+        stdscr.addstr(2, 0, "NODES STATUS", curses.A_UNDERLINE)
+        for i, node in enumerate(EXPECTED_NODES):
+            exists = node in nodes
+            color = curses.color_pair(1) if exists else curses.color_pair(2)
+            stdscr.addstr(3+i, 2, f"{'[✓]' if exists else '[✗]'} {node}", color)
+
+        # --- Topics Section ---
+        stdscr.addstr(8, 0, "TELEMETRY (Hz)", curses.A_UNDERLINE)
+        for i, topic in enumerate(TARGET_TOPICS):
+            stat = "Offline"
+            if topic in topics:
+                hz = run_cmd(f"timeout 0.4s ros2 topic hz {topic}")
+                stat = re.findall(r"average rate: ([\d.]+)", hz)[0] + " Hz" if hz and "average" in hz else "Streaming..."
+            
+            color = curses.color_pair(1) if "Hz" in stat or "Stream" in stat else curses.color_pair(2)
+            stdscr.addstr(9+i, 2, f"{topic:<15}: {stat}", color)
+            topic_data[topic] = stat
+            
+        stdscr.addstr(15, 0, "Press 'q' to exit and see summary report", curses.A_DIM)
+        stdscr.refresh()
+        if stdscr.getch() == ord('q'): 
+            return {"nodes": nodes, "topics": topic_data}
 
 if __name__ == "__main__":
-    try:
-        curses.wrapper(draw_uber_dashboard)
-    except KeyboardInterrupt:
-        pass
+    final = curses.wrapper(draw)
+    print("\n" + "="*45)
+    print("📋 FINAL MISSION REPORT")
+    print("="*45)
+    
+    print(f"\n[SYSTEM NODES]")
+    for node in EXPECTED_NODES:
+        status = "✅ ACTIVE" if node in final['nodes'] else "❌ OFFLINE"
+        print(f"  {node:<20} : {status}")
+
+    print(f"\n[TOPIC HEALTH]")
+    for topic, hz in final['topics'].items():
+        icon = "🟢" if "Hz" in hz or "Stream" in hz else "🔴"
+        print(f"  {icon} {topic:<15} : {hz}")
+
+    print(f"\n[HARDWARE MAPPING]")
+    for port, name in SERIAL_MAP.items():
+        exists = os.path.exists(port)
+        print(f"  {'🔗' if exists else '🚫'} {port:<12} -> {name} ({'CONNECTED' if exists else 'DISCONNECTED'})")
+    
+    print("\n" + "="*45 + "\n")

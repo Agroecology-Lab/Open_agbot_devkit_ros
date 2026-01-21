@@ -3,7 +3,7 @@ ublox_gps_node:
   ros__parameters:
     debug: 1                    # Range 0-4 (0 means no debug statements will print)
 
-    # device: /dev/ttyACM0      # This will be overridden by the launch file
+    # device: "/dev/ttyACM2"
     frame_id: gnss
 
     uart1:

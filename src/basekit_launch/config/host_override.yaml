@@ -1,6 +1,5 @@
-
-basekit_driver_node:
+/**:
   ros__parameters:
-    port: "/dev/ttyACM0"
+    port: "/dev/ttyACM0"  # This is a fallback
     read_data:
       list: ["battery", "encoder_left", "encoder_right"]

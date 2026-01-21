@@ -4,3 +4,8 @@ basekit_driver_node:
     port: "/dev/ttyACM0"
     read_data:
       list: ["battery", "encoder_left", "encoder_right"]
+ublox_gps_node:
+  ros__parameters:
+    device: "/dev/ttyACM2"
+    uart1:
+      baudRate: 115200

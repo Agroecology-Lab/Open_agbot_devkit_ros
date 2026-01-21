@@ -1,81 +1,55 @@
 #!/usr/bin/env python3
-import argparse
-import subprocess
-import os
-import sys
+import subprocess, os, sys
 
-CONTAINER_WS = "/open_agbot_ws"
-IMAGE_TAG = "openagbot:dev"
+IMAGE_NAME = "agbot_image"
+CONTAINER_NAME = "open_agbot"
+WORKSPACE = os.getcwd()
 
-# Colors
-YEL, GRN, RED, RST = "\033[93m", "\033[92m", "\033[91m", "\033[0m"
+def run_cmd(cmd):
+    return subprocess.run(cmd, shell=True)
 
-def log(msg, col=YEL): print(f"{col}[manage.py]{RST} {msg}")
-
-def launch(mode="fast"):
-    # 1. Sync hardware via fixusb
-    subprocess.run(["python3", "fixusb.py"], check=True)
+def launch():
+    print("🔍 Running fixusb.py...")
+    run_cmd("python3 fixusb.py")
+    
+    mcu, gps = "/dev/ttyACM0", "/dev/ttyACM2"
     if os.path.exists(".env"):
         with open(".env", "r") as f:
             for line in f:
-                if "=" in line:
-                    k, v = line.strip().split("=", 1)
-                    os.environ[k] = v
+                if "MCU_PORT" in line: mcu = line.split("=")[1].strip()
+                if "GPS_PORT" in line: gps = line.split("=")[1].strip()
 
-    # 2. Extract detected ports from environment
-    gps_port = os.environ.get('GPS_PORT')
-    mcu_port = os.environ.get('MCU_PORT')
-    
-    if not gps_port or not mcu_port:
-        log("❌ Hardware not found! Check connections.", RED)
-        sys.exit(1)
+    print(f"🛠️  PATCHING SOURCE...")
+    # Ensure modules folder is a package
+    run_cmd("touch src/basekit_driver/basekit_driver/modules/__init__.py")
+    # Apply C++ GPS path fix
+    run_cmd(f"sed -i 's|/dev/ttyACM0|{gps}|g' src/ublox/ublox_gps/src/node.cpp")
 
-    # 3. Cleanup locks and permissions on host
-    subprocess.run(f"sudo fuser -k {gps_port} {mcu_port} || true", shell=True, capture_output=True)
-    subprocess.run(f"sudo chmod 666 {gps_port} {mcu_port} || true", shell=True)
-    subprocess.run("sudo pkill -9 -f _node || true", shell=True)
+    # Update Driver Config
+    with open("src/basekit_driver/config/basekit_driver.yaml", "w") as f:
+        f.write(f"""
+basekit_driver_node:
+  ros__parameters:
+    port: "{mcu}"
+    read_data:
+      list: ["battery", "encoder_left", "encoder_right"]
+""")
 
-    # 4. ROS Commands
-    param_path = f"{CONTAINER_WS}/install/basekit_driver/share/basekit_driver/config/basekit_driver.yaml"
-    
-    # We pass the ports explicitly to the launch file
+    print(f"🚀 Building Full Workspace and Launching...")
+    run_cmd("sudo chmod 666 /dev/ttyACM*")
+    run_cmd(f"docker rm -f {CONTAINER_NAME} 2>/dev/null || true")
+
+    # Removed --packages-select to ensure 'basekit_launch' is installed
     launch_cmd = (
-        f"ros2 launch basekit_launch master.launch.py "
-        f"gps_port:={gps_port} "
-        f"mcu_port:={mcu_port} "
-        f"device:={gps_port} "
-        f"basekit_params_file:={param_path}"
+        f"docker run -it --name {CONTAINER_NAME} --net=host --privileged "
+        f"-v /dev:/dev -v {WORKSPACE}:/open_agbot_ws -w /open_agbot_ws "
+        f"{IMAGE_NAME} bash -c '"
+        f"source /opt/ros/humble/setup.bash && "
+        f"colcon build --symlink-install && "
+        f"source install/setup.bash && "
+        f"ros2 launch basekit_launch master.launch.py'"
     )
-    
-    setup_ros = "source /opt/ros/humble/setup.bash"
-    
-    if mode == "build":
-        log(f"🛠️  Building & Launching (GPS: {gps_port}, MCU: {mcu_port})...", YEL)
-        # Clear specific package artifacts and rebuild
-        inner_cmd = f"{setup_ros} && rm -rf build/basekit_driver install/basekit_driver && colcon build --symlink-install --packages-select basekit_driver && source install/setup.bash && {launch_cmd}"
-    else:
-        log(f"🚀 Fast Launching (GPS: {gps_port}, MCU: {mcu_port})...", GRN)
-        inner_cmd = f"{setup_ros} && source install/setup.bash && {launch_cmd}"
-
-    # Docker Command
-    docker_cmd = [
-        "docker", "run", "-it", "--rm", "--name", "openagbot_app", "--privileged", "--network", "host",
-        "-v", "/dev:/dev", "-v", f"{os.getcwd()}:{CONTAINER_WS}",
-        "-e", "PYTHONUNBUFFERED=1", IMAGE_TAG, "bash", "-c", inner_cmd
-    ]
-    
-    try:
-        subprocess.run(docker_cmd)
-    except KeyboardInterrupt:
-        log("🛑 Stopping container.", YEL)
+    run_cmd(launch_cmd)
 
 if __name__ == "__main__":
-    p = argparse.ArgumentParser()
-    p.add_argument('cmd', nargs='?', choices=['run', 'build', 'clean'], default='run')
-    args = p.parse_args()
-    
-    if args.cmd == 'clean':
-        subprocess.run(["sudo", "rm", "-rf", "build", "install", "log"])
-        log("Workspace cleaned.", GRN)
-    else:
-        launch(mode="build" if args.cmd == "build" else "fast")
+    launch()

@@ -36,10 +36,22 @@ The primary entry point for the system. While it runs the full stack by default,
 | Argument | Description |
 | :--- | :--- |
 | (no args) | Standard mode: Detects hardware, builds workspace, and launches the stack. |
-| --build | Rebuilds the ROS 2 workspace (colcon build) before launching. |
-| --pkg <name> | Builds only the specified package. |
-| --debug | Launches containers in the foreground with verbose logging. |
-| --clean | Removes build, install, and log directories before starting. |
+| build | Rebuilds the ROS 2 workspace (colcon build) before launching. |
+| pkg <name> | Builds only the specified package. |
+| debug | Launches containers in the foreground with verbose logging. |
+| clean | Removes build, install, and log directories before starting. |
+
+
+- Auto-Detects Hardware: Identifies the real USB paths for the GPS and MCU on the host, so you don't have to guess if they are ACM0 or ACM2.
+
+- Hardcodes the "Un-configurable": Uses sed to patch hardware paths directly into C++ source files on the host before they are compiled.
+
+- Fixes "Root" Permissions: Uses sudo to wipe old build/ and install/ folders that the Docker container (running as root) locked down.
+
+- Forces a Live Build: Runs colcon build inside the container to ensure the software is compiled specifically for your host's current sensor setup.
+
+- Overlays the Workspace: Mounts your host’s src and install folders over the container’s internal files, making your local code the "Source of Truth."
+
 
 ### Interactive Shell
 To enter the running container for debugging or manual ROS 2 commands:
