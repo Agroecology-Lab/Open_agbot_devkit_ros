@@ -12,7 +12,7 @@ def launch():
     print("🔍 Running fixusb.py...")
     run_cmd("python3 fixusb.py")
     
-    mcu, gps = "/dev/ttyACM0", "/dev/ttyACM2"
+    mcu, gps = "/dev/ttyACM[0-9]", "/dev/ttyACM2"
     if os.path.exists(".env"):
         with open(".env", "r") as f:
             for line in f:
@@ -23,7 +23,7 @@ def launch():
     # Ensure modules folder is a package
     run_cmd("touch src/basekit_driver/basekit_driver/modules/__init__.py")
     # Apply C++ GPS path fix
-    run_cmd(f"sed -i 's|/dev/ttyACM0|{gps}|g' src/ublox/ublox_gps/src/node.cpp")
+    run_cmd(f"sed -i 's|/dev/ttyACM[0-9]|{gps}|g' src/ublox/ublox_gps/src/node.cpp")
 
     # Update Driver Config
     with open("src/basekit_driver/config/basekit_driver.yaml", "w") as f:
