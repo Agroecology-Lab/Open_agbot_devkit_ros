@@ -9,22 +9,32 @@ import threading
 class BasekitUI(Node):
     def __init__(self):
         super().__init__('web_ui')
-        self.state = {'gps_status': 'Waiting...', 'lat': 51.539424, 'lon': -0.118092, 
-                      'volt': 0.0, 'perc': 0.0, 'estop_active': False}
+        self.state = {
+            'gps_status': 'Waiting...', 
+            'lat': 51.539424, 'lon': -0.118092, 
+            'volt': 0.0, 'perc': 0.0, 
+            'linear': 0.0, 'angular': 0.0,
+            'estop_active': False
+        }
         self.first_fix = False
 
         self.create_subscription(NavSatFix, '/ublox_gps_node/fix', self.gps_cb, 10)
         self.create_subscription(BatteryState, '/battery_state', self.bat_cb, 10)
         self.create_subscription(Bool, '/estop1_state', lambda m: self.set_s('estop_active', m.data), 10)
+        self.create_subscription(Twist, "/cmd_vel", self.cmd_vel_callback, 10)
         
         self.cmd_pub = self.create_publisher(Twist, '/cmd_vel', 10)
         self.stop_pub = self.create_publisher(Bool, '/emergency_stop', 10)
 
     def set_s(self, k, v): self.state[k] = v
 
+    def cmd_vel_callback(self, msg):
+        lx = msg.linear.x if abs(msg.linear.x) > 0.05 else 0.0
+        az = msg.angular.z if abs(msg.angular.z) > 0.05 else 0.0
+        self.state.update({'linear': lx, 'angular': az})
+
     def gps_cb(self, msg):
-        if msg.latitude == 0.0 and msg.longitude == 0.0:
-            return
+        if msg.latitude == 0.0 and msg.longitude == 0.0: return
         status_map = {-1: 'No Fix', 0: '3D Fix', 1: 'RTK Float', 2: 'RTK FIXED'}
         current_status = status_map.get(msg.status.status, 'Unknown')
         self.state.update({'lat': msg.latitude, 'lon': msg.longitude, 'gps_status': current_status})
@@ -74,8 +84,20 @@ def main(args=None):
                 with ui.card().classes('w-full items-center bg-grey-9'):
                     ui.label('JOYSTICK').classes('text-caption text-grey-5')
                     ui.joystick(color='white', size=160, on_move=lambda e: node.drive(e.x, e.y), on_end=lambda _: node.drive(0, 0))
+                
+                with ui.card().classes('w-full bg-grey-9 p-4'):
+                    ui.label('LIVE TELEMETRY').classes('text-caption text-grey-5')
+                    with ui.row().classes('w-full justify-around'):
+                        with ui.column().classes('items-center'):
+                            ui.label().bind_text_from(node.state, 'linear', backward=lambda x: f"{x:.2f}").classes('text-h6 text-blue-400')
+                            ui.label('m/s').classes('text-caption')
+                        with ui.column().classes('items-center'):
+                            ui.label().bind_text_from(node.state, 'angular', backward=lambda x: f"{x:.2f}").classes('text-h6 text-orange-400')
+                            ui.label('rad/s').classes('text-caption')
+
                 with ui.card().classes('w-full bg-grey-9'):
                     ui.button('STOP', on_click=node.stop_robot).classes('bg-red-9 text-white w-full h-16 text-bold')
+                
                 with ui.card().classes('w-full bg-grey-9'):
                     ui.linear_progress().bind_value_from(node.state, 'perc')
                     ui.label().bind_text_from(node.state, 'volt', backward=lambda x: f"{x:.2f}V").classes('text-center w-full')
@@ -84,4 +106,3 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
-
