@@ -1,65 +1,68 @@
 import os
 import shutil
-from pathlib import Path
+import sys
 
 def get_size(path):
     """Calculate size of file or directory in bytes."""
-    if os.path.isfile(path):
-        return os.path.getsize(path)
-    total_size = 0
+    if os.path.islink(path):
+        return 0
     try:
-        for dirpath, dirnames, filenames in os.walk(path):
-            for f in filenames:
-                fp = os.path.join(dirpath, f)
-                # skip if it is symbolic link
-                if not os.path.islink(fp):
-                    total_size += os.path.getsize(fp)
-    except (PermissionError, FileNotFoundError):
-        pass
-    return total_size
+        if os.path.isfile(path):
+            return os.path.getsize(path)
+        
+        total_size = 0
+        with os.scandir(path) as it:
+            for entry in it:
+                if entry.is_symlink():
+                    continue
+                if entry.is_file():
+                    total_size += entry.stat().st_size
+                elif entry.is_dir():
+                    # Stay away from virtual filesystems
+                    if entry.name in ['proc', 'sys', 'dev', 'run']:
+                        continue
+                    total_size += get_size(entry.path)
+        return total_size
+    except (PermissionError, FileNotFoundError, OSError):
+        return 0
 
 def format_bytes(size):
-    """Convert bytes to a human-readable string."""
     for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
         if size < 1024:
             return f"{size:.2f} {unit}"
         size /= 1024
+    return f"{size:.2f} PB"
 
-def scan_folders(start_path, limit=10):
-    print(f"\n🔍 Scanning: {start_path}")
-    items = []
+def scan_path(target_path, limit=12):
+    print(f"\n🔍 Detailed Scan: {target_path}")
+    print(f"{'Folder/File':<35} | {'Size':<10}")
+    print("-" * 50)
     
+    items = []
     try:
-        for entry in os.scandir(start_path):
-            size = get_size(entry.path)
-            items.append((entry.name, size))
-    except PermissionError:
-        print("⚠️ Run as sudo to scan system directories.")
+        with os.scandir(target_path) as it:
+            for entry in it:
+                size = get_size(entry.path)
+                items.append((entry.name, size))
+    except Exception as e:
+        print(f"Error accessing {target_path}: {e}")
         return
 
-    # Sort by size descending
     items.sort(key=lambda x: x[1], reverse=True)
-
-    print(f"{'Folder/File':<30} | {'Size':<10}")
-    print("-" * 45)
     for name, size in items[:limit]:
-        print(f"{name[:30]:<30} | {format_bytes(size):<10}")
+        if size > 1024 * 1024: # Only show items > 1MB for clarity
+            print(f"{name[:35]:<35} | {format_bytes(size):<10}")
 
 if __name__ == "__main__":
-    # 1. Check Root Partition
+    # Check partition health first
     total, used, free = shutil.disk_usage("/")
-    print(f"📊 Disk Summary (Root /):")
-    print(f"   Total: {format_bytes(total)}")
-    print(f"   Used:  {format_bytes(used)} ({used/total:.1%})")
-    print(f"   Free:  {format_bytes(free)}")
+    print(f"📊 Disk Summary (Root /): Free: {format_bytes(free)}")
 
-    # 2. Check Home Directory (Personal Bloat)
-    scan_folders(os.path.expanduser("~"))
-
-    # 3. Check Workspace (Project Bloat)
-    workspace_path = os.getcwd()
-    scan_folders(workspace_path)
-
-    # 4. Critical System Paths (Requires Sudo often)
-    print("\n💡 Tip: If Home and Workspace look small, check '/var/lib/docker'")
-    print("   Run: sudo du -sh /var/lib/docker")
+    # Specific targets for Sam's ThinkPad
+    if os.getuid() != 0:
+        print("⚠️  Run as 'sudo' to accurately scan /var/lib/docker")
+    
+    scan_path("/var")
+    scan_path("/var/lib")
+    if os.path.exists("/var/lib/docker"):
+        scan_path("/var/lib/docker")

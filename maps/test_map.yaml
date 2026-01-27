@@ -1,12 +1,45 @@
+name: "test_map"
+metric_map: "map"
+pointset: "agbot_fields"
+transformation:
+  child: "robot_base"
+  parent: "map"
+  rotation: {w: 1.0, x: 0.0, y: 0.0, z: 0.0}
+  translation: {x: 0.0, y: 0.0, z: 0.0}
 nodes:
   - node:
-      name: "start_point"
-      pose: {position: {x: 0.0, y: 0.0, z: 0.0}, orientation: {w: 1.0}}
+      name: "WayPoint1"
+      meta:
+        map: "test_map"
+        pointset: "agbot_fields"
+        node_type: "waypoint"
+      pose:
+        position: {x: 0.0, y: 0.0, z: 0.0}
+        orientation: {w: 1.0, x: 0.0, y: 0.0, z: 0.0}
+      edges:
+        - action: "nav2_to_pose"
+          edge_id: "WP1_to_WP2"
+          node: "WayPoint2"
+      verts:
+        - {x: 0.5, y: 0.5}
+        - {x: -0.5, y: 0.5}
+        - {x: -0.5, y: -0.5}
+        - {x: 0.5, y: -0.5}
   - node:
-      name: "end_point"
-      pose: {position: {x: 5.0, y: 0.0, z: 0.0}, orientation: {w: 1.0}}
-edges:
-  - edge:
-      node_id: "start_point"
-      dest_node: "end_point"
-      action: "move_base"
+      name: "WayPoint2"
+      meta:
+        map: "test_map"
+        pointset: "agbot_fields"
+        node_type: "waypoint"
+      pose:
+        position: {x: 2.0, y: 0.0, z: 0.0}
+        orientation: {w: 1.0, x: 0.0, y: 0.0, z: 0.0}
+      edges:
+        - action: "nav2_to_pose"
+          edge_id: "WP2_to_WP1"
+          node: "WayPoint1"
+      verts:
+        - {x: 0.5, y: 0.5}
+        - {x: -0.5, y: 0.5}
+        - {x: -0.5, y: -0.5}
+        - {x: 0.5, y: -0.5}
