@@ -19,7 +19,7 @@ RUN for i in {1..5}; do \
     apt-get update && break || sleep 10; \
     done
 
-# 2. Comprehensive Dependency Install
+# 2. Comprehensive Dependency Install (Added tf-transformations here)
 RUN for i in {1..5}; do \
     apt-get update && \
     apt-get install -y --no-install-recommends --fix-missing \
@@ -44,7 +44,7 @@ RUN mkdir -p /root/.lizard && cd /root && \
     unzip -qo lizard.zip -d /root/.lizard && rm lizard.zip && \
     chmod +x /root/.lizard/espresso.py
 
-# 4. Two-Phase Workspace Build
+# 4. Workspace Build
 COPY ./src ./src
 RUN . /opt/ros/humble/setup.sh && \
     colcon build --symlink-install --packages-select ublox_serialization ublox_msgs --executor sequential && \
@@ -57,29 +57,36 @@ RUN . /opt/ros/humble/setup.sh && \
 FROM ros:humble-ros-base
 WORKDIR /workspace
 
-# Copy build artifacts and firmware
 COPY --from=builder /workspace/install /workspace/install
 COPY --from=builder /root/.lizard /opt/lizard
 COPY --from=builder /usr/share/keyrings/mongodb-server-6.0.gpg /usr/share/keyrings/mongodb-server-6.0.gpg
 COPY --from=builder /etc/apt/sources.list.d/mongodb-org-6.0.list /etc/apt/sources.list.d/mongodb-org-6.0.list
 
-# --- SYSTEM LINKER FIX ---
-# This registers custom message libraries globally so C++ nodes (Nav2) can find them
-RUN echo "/workspace/install/map_msgs/lib" > /etc/ld.so.conf.d/agbot_messages.conf && \
-    echo "/workspace/install/topological_navigation_msgs/lib" >> /etc/ld.so.conf.d/agbot_messages.conf && \
-    ldconfig
-
-# Update Library and Python Paths
-ENV LD_LIBRARY_PATH="/workspace/install/map_msgs/lib:/workspace/install/topological_navigation_msgs/lib:/opt/ros/humble/lib:${LD_LIBRARY_PATH}"
-ENV PYTHONPATH="/workspace/install/topological_navigation/lib/python3.10/site-packages:/workspace/install/basekit_driver/lib/python3.10/site-packages:${PYTHONPATH}"
-
-# Make sure the scripts are executable
-RUN chmod +x /workspace/install/topological_navigation/lib/topological_navigation/*.py || true
-
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PIP_BREAK_SYSTEM_PACKAGES=1
 ENV RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+# Fixed the warning: Initializing PYTHONPATH safely
+ENV PYTHONPATH="/workspace/install/basekit_driver/lib/python3.10/site-packages:${PYTHONPATH}"
 
-# 5. Resilient Runtime Install
-RUN for i in {1..5}; do \
+RUN apt-get update && apt-get install -y gnupg curl && \
+    curl -fsSL https://www.mongodb.org/static/pgp/server-6.0.asc | gpg --dearmor --yes -o /usr/share/keyrings/mongodb-server-6.0.gpg && \
+    for i in {1..5}; do \
     apt-get update && \
+    apt-get install -y --no-install-recommends --fix-missing \
+    python3-pip python3-serial udev libasio-dev \
+    ros-humble-navigation2 \
+    ros-humble-ublox-gps \
+    ros-humble-tf-transformations \
+    ros-humble-rmw-cyclonedds-cpp && \
+    break || sleep 10; \
+    done && \
+    python3 -m pip install --no-cache-dir --upgrade pip && \
+    python3 -m pip install --no-cache-dir nicegui lizard transforms3d && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+RUN echo "source /opt/ros/humble/setup.bash" >> /root/.bashrc && \
+    echo "source /workspace/install/setup.bash" >> /root/.bashrc && \
+    usermod -a -G dialout root && \
+    chmod -R 755 /opt/lizard
+
+CMD ["/bin/bash"]
