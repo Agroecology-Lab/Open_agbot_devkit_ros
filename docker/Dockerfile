@@ -70,8 +70,10 @@ RUN echo "/workspace/install/map_msgs/lib" > /etc/ld.so.conf.d/agbot_messages.co
     ldconfig
 
 # Update Library and Python Paths
-ENV LD_LIBRARY_PATH="/workspace/install/map_msgs/lib:/workspace/install/topological_navigation_msgs/lib:/opt/ros/humble/lib:${LD_LIBRARY_PATH}"
-ENV PYTHONPATH="/workspace/install/topological_navigation/lib/python3.10/site-packages:/workspace/install/basekit_driver/lib/python3.10/site-packages:${PYTHONPATH}"
+
+ENV LD_LIBRARY_PATH="/workspace/install/map_msgs/lib:/workspace/install/topological_navigation_msgs/lib:/opt/ros/humble/lib"
+ENV PYTHONPATH="/workspace/install/topological_navigation/lib/python3.10/site-packages:/workspace/install/basekit_driver/lib/python3.10/site-packages"
+
 
 # Make sure the scripts are executable
 RUN chmod +x /workspace/install/topological_navigation/lib/topological_navigation/*.py || true
