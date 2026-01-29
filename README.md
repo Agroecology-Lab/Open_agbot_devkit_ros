@@ -4,7 +4,11 @@ An open-source, containerised ROS 2 stack for autonomous agricultural robotics. 
 
 Development is led by the <a href="https://agroecologylab.org.uk" target="_blank">Agroecology Lab </a> building on the core developed by <a href="https://github.com/zauberzeug/" target="_blank">Zauberzeug</a> 
 
+<<<<<<< HEAD
 (Latest work with Topological Nav is in the /dev branch, but under heavy development)
+=======
+Latest work is in the /dev branch. 
+>>>>>>> da0d815 (docs: update README with /dev info)
 ---
 
 ## Quick Start
@@ -41,16 +45,6 @@ The primary entry point for the system. While it runs the full stack by default,
 | down     | Executes docker compose down to stop and remove the containers and networks.               |
 
 
-- Auto-Detects Hardware: Identifies the real USB paths for the GPS and MCU on the host, so you don't have to guess if they are ACM0 or ACM2.
-
-- Hardcodes the "Un-configurable": Uses sed to patch hardware paths directly into C++ source files on the host before they are compiled.
-
-- Fixes "Root" Permissions: Uses sudo to wipe old build/ and install/ folders that the Docker container (running as root) locked down.
-
-- Forces a Live Build: Runs colcon build inside the container to ensure the software is compiled specifically for your host's current sensor setup.
-
-- Overlays the Workspace: Mounts your host’s src and install folders over the container’s internal files, making your local code the "Source of Truth."
-
 
 ### Interactive Shell
 To enter the running container for debugging or manual ROS 2 commands:
@@ -66,6 +60,69 @@ python3 src/agbot-diagnostic.py
 ```
 
 ![TUI Status.](https://raw.githubusercontent.com/Agroecology-Lab/Open_agbot_devkit_ros/refs/heads/main/assets/Screenshot%20From%202026-01-21%2018-07-45.png)
+
+### Dev branch topics
+
+● /BASEKIT_DRIVER_NODE
+  ├─ Publishers: /battery_state: sensor_msgs/msg/BatteryState, /bumper_back_state: std_msgs/msg/Bool, /bumper_front_bottom_state: std_msgs/msg/Bool, /bumper_front_top_state: std_msgs/msg/Bool
+  └─ Subscribers: /cmd_vel: geometry_msgs/msg/Twist, /configure: std_msgs/msg/Empty, /emergency_stop: std_msgs/msg/Bool, /battery_state: sensor_msgs/msg/BatteryState
+
+● /CONTROLLER_SERVER
+  ├─ Publishers: /controller_server/transition_event: lifecycle_msgs/msg/TransitionEvent, /parameter_events: rcl_interfaces/msg/ParameterEvent, /rosout: rcl_interfaces/msg/Log
+  └─ Subscribers: /parameter_events: rcl_interfaces/msg/ParameterEvent, /controller_server/transition_event: lifecycle_msgs/msg/TransitionEvent, /parameter_events: rcl_interfaces/msg/ParameterEvent, /rosout: rcl_interfaces/msg/Log
+
+● /LIFECYCLE_MANAGER_NAVIGATION
+  ├─ Publishers: /diagnostics: diagnostic_msgs/msg/DiagnosticArray, /parameter_events: rcl_interfaces/msg/ParameterEvent, /rosout: rcl_interfaces/msg/Log
+  └─ Subscribers: /parameter_events: rcl_interfaces/msg/ParameterEvent, /diagnostics: diagnostic_msgs/msg/DiagnosticArray, /parameter_events: rcl_interfaces/msg/ParameterEvent, /rosout: rcl_interfaces/msg/Log
+
+● /LOCAL_COSTMAP/LOCAL_COSTMAP
+  ├─ Publishers: /local_costmap/local_costmap/transition_event: lifecycle_msgs/msg/TransitionEvent, /parameter_events: rcl_interfaces/msg/ParameterEvent, /rosout: rcl_interfaces/msg/Log
+  └─ Subscribers: /parameter_events: rcl_interfaces/msg/ParameterEvent, /local_costmap/local_costmap/transition_event: lifecycle_msgs/msg/TransitionEvent, /parameter_events: rcl_interfaces/msg/ParameterEvent, /rosout: rcl_interfaces/msg/Log
+
+● /ROSAPI
+  ├─ Publishers: /parameter_events: rcl_interfaces/msg/ParameterEvent, /rosout: rcl_interfaces/msg/Log
+  └─ Subscribers: /parameter_events: rcl_interfaces/msg/ParameterEvent, /rosout: rcl_interfaces/msg/Log, /rosapi/action_feedback_details: rosapi_msgs/srv/ActionFeedbackDetails, /rosapi/action_goal_details: rosapi_msgs/srv/ActionGoalDetails
+
+● /ROSAPI_PARAMS
+  ├─ Publishers: /parameter_events: rcl_interfaces/msg/ParameterEvent, /rosout: rcl_interfaces/msg/Log
+  └─ Subscribers: /parameter_events: rcl_interfaces/msg/ParameterEvent, /rosout: rcl_interfaces/msg/Log
+
+● /ROSBRIDGE_WEBSOCKET
+  ├─ Publishers: /client_count: std_msgs/msg/Int32, /connected_clients: rosbridge_msgs/msg/ConnectedClients, /parameter_events: rcl_interfaces/msg/ParameterEvent, /rosout: rcl_interfaces/msg/Log
+  └─ Subscribers: /client_count: std_msgs/msg/Int32, /connected_clients: rosbridge_msgs/msg/ConnectedClients, /parameter_events: rcl_interfaces/msg/ParameterEvent, /rosout: rcl_interfaces/msg/Log
+
+● /TOPOLOGICAL_NAVIGATION
+  ├─ Publishers: /current_edge: std_msgs/msg/String, /parameter_events: rcl_interfaces/msg/ParameterEvent, /rosout: rcl_interfaces/msg/Log, /topological_navigation/Route: topological_navigation_msgs/msg/TopologicalRoute
+  └─ Subscribers: /topological_map_2: std_msgs/msg/String, /current_edge: std_msgs/msg/String, /parameter_events: rcl_interfaces/msg/ParameterEvent, /rosout: rcl_interfaces/msg/Log
+
+● /TOPOLOGICAL_NAVIGATION
+  ├─ Publishers: /current_edge: std_msgs/msg/String, /parameter_events: rcl_interfaces/msg/ParameterEvent, /rosout: rcl_interfaces/msg/Log, /topological_navigation/Route: topological_navigation_msgs/msg/TopologicalRoute
+  └─ Subscribers: /topological_map_2: std_msgs/msg/String, /current_edge: std_msgs/msg/String, /parameter_events: rcl_interfaces/msg/ParameterEvent, /rosout: rcl_interfaces/msg/Log
+
+● /TOPOLOGICAL_NAVIGATION
+  ├─ Publishers: /current_edge: std_msgs/msg/String, /parameter_events: rcl_interfaces/msg/ParameterEvent, /rosout: rcl_interfaces/msg/Log, /topological_navigation/Route: topological_navigation_msgs/msg/TopologicalRoute
+  └─ Subscribers: /topological_map_2: std_msgs/msg/String, /current_edge: std_msgs/msg/String, /parameter_events: rcl_interfaces/msg/ParameterEvent, /rosout: rcl_interfaces/msg/Log
+
+● /TRANSFORM_LISTENER_IMPL_7338700090A0
+  ├─ Publishers: /rosout: rcl_interfaces/msg/Log
+  └─ Subscribers: /parameter_events: rcl_interfaces/msg/ParameterEvent, /tf: tf2_msgs/msg/TFMessage, /tf_static: tf2_msgs/msg/TFMessage, /rosout: rcl_interfaces/msg/Log
+
+● /UBLOX_GPS_NODE
+  ├─ Publishers: /diagnostics: diagnostic_msgs/msg/DiagnosticArray, /gps/fix_velocity: geometry_msgs/msg/TwistWithCovarianceStamped, /navrelposned: ublox_msgs/msg/NavRELPOSNED9, /navstatus: ublox_msgs/msg/NavSTATUS
+  └─ Subscribers: /parameter_events: rcl_interfaces/msg/ParameterEvent, /rtcm: rtcm_msgs/msg/Message, /diagnostics: diagnostic_msgs/msg/DiagnosticArray, /gps/fix_velocity: geometry_msgs/msg/TwistWithCovarianceStamped
+
+● /WEB_UI
+  ├─ Publishers: /cmd_vel: geometry_msgs/msg/Twist, /emergency_stop: std_msgs/msg/Bool, /parameter_events: rcl_interfaces/msg/ParameterEvent, /rosout: rcl_interfaces/msg/Log
+  └─ Subscribers: /battery_state: sensor_msgs/msg/BatteryState, /cmd_vel: geometry_msgs/msg/Twist, /estop1_state: std_msgs/msg/Bool, /ublox_gps_node/fix: sensor_msgs/msg/NavSatFix
+
+
+
+
+
+
+
+
+
 
 ---
 
@@ -120,7 +177,11 @@ You may also have success with alternate platforms such as
 - Compute: Linux-based host (Avaota A1, Raspberry Pi, Jetson) running Docker.
 - MCU: ESP32 Control Board 
 - GPS: u-blox ZED-F9P 
+<<<<<<< HEAD
 - Communication: UART.
+=======
+- Communication: USB Serial (CDC).
+>>>>>>> da0d815 (docs: update README with /dev info)
 - <a href="https://lizard.dev/module_reference/" target="_blank">Hardware & Motor drivers supported by Lizard </a>M
 
 ---
