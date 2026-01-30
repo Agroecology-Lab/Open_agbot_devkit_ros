@@ -28,6 +28,29 @@ python3 manage.py
 ```
 *Note: manage.py requires no arguments for standard operation. It automatically detects hardware ports (ESP32 & u-blox), updates your .env configuration, builds the workspace via colcon, and launches the containers.*
 
+
+---
+## Roadmap
+
+Ratings scale from 0.1 (Conceptual) to 1.0 (Production-Ready), with 0.0 indicating a planned or non-validated integration.
+
+
+### AgBot Development Status Matrix
+
+| Maturity | Feature | Description |
+| :--- | :--- | :--- |
+| **0.9** | **Containerised Deployment** | Full ROS 2 Humble stack managed via Docker and the `manage.py` orchestration script. |
+| **0.8** | **[KumarRobotics Ublox Driver](https://github.com/KumarRobotics/ublox)** | Modified driver providing high-bandwidth UBX binary data via a fail-safe boot sequence. |
+| **0.7** | **Stable Device Addressing** | Persistent symlinking via the `fixusb.py` utility to map hardware to `/dev/esp` and `/dev/gps`. |
+| **0.6** | **[Sentor Safety & Health Monitoring](https://github.com/LCAS/sentor)** | Integrated hardware-software heartbeat and topic-based diagnostics to trigger automated recovery or emergency motor cut-off. |
+| **0.5** | **Dynamic Hardware Abstraction** | Lizard firmware integration for real-time ESP32 configuration via the basekit driver. |
+| **0.5** | **Real-time Telemetry & Teleop Dashboard** | Web-based cockpit for joystick control, monitoring battery and GPS health via the `basekit_ui` package. |
+| **0.1** | **[Topological Navigation](https://github.com/LCAS/topological_navigation)** | Integration of the LCAS topological framework for graph-based semantic waypoint navigation. |
+| **0.0** | **[Visual Crop-Row Navigation](https://github.com/Agroecology-Lab/visual-multi-crop-row-navigation/tree/ROS2)** | Vision-based guidance system for following crop rows; currently in porting status for ROS 2. |
+| **0.0** | **[Vizanti Web Visualisation](https://github.com/MoffKalast/vizanti/tree/ros2)** | Planned integration of a web-based mission planner and 3D visualiser for remote operations. |
+
+
+
 ---
 
 ## Management & Tools
@@ -120,27 +143,6 @@ python3 src/agbot-diagnostic.py
 
 ![TUI Status.](https://raw.githubusercontent.com/Agroecology-Lab/Open_agbot_devkit_ros/refs/heads/main/assets/Screenshot%20From%202026-01-21%2020-37-03.png)
 
-
----
-## Roadmap
-
-Ratings scale from 0.1 (Conceptual) to 1.0 (Production-Ready), with 0.0 indicating a planned or non-validated integration.
-
-
-### AgBot Development Status Matrix
-
-| Maturity | Feature | Description |
-| :--- | :--- | :--- |
-| **0.9** | **Containerised Deployment** | Full ROS 2 Humble stack managed via Docker and the `manage.py` orchestration script. |
-| **0.8** | **[KumarRobotics Ublox Driver](https://github.com/KumarRobotics/ublox)** | Modified driver providing high-bandwidth UBX binary data via a fail-safe "Lobotomy" boot sequence. |
-| **0.7** | **Stable Device Addressing** | Persistent symlinking via the `fixusb.py` utility to map hardware to `/dev/esp` and `/dev/gps`. |
-| **0.6** | **[Sentor Safety & Health Monitoring](https://github.com/LCAS/sentor)** | Integrated hardware-software heartbeat and topic-based diagnostics to trigger automated recovery or emergency motor cut-off. |
-| **0.5** | **Environment-Driven Configuration** | Host-agnostic architecture using dynamic environment variables within the launch system. |
-| **0.5** | **Dynamic Hardware Abstraction** | Lizard firmware engine integration for real-time ESP32 configuration via the basekit driver. |
-| **0.5** | **Real-time Telemetry Dashboard** | Web-based cockpit for monitoring battery and GPS health via the `basekit_ui` package. |
-| **0.1** | **[Topological Navigation](https://github.com/LCAS/topological_navigation)** | Integration of the LCAS topological framework for graph-based semantic waypoint navigation. |
-| **0.0** | **[Visual Crop-Row Navigation](https://github.com/Agroecology-Lab/visual-multi-crop-row-navigation/tree/ROS2)** | Vision-based guidance system for following crop rows; currently in porting status for ROS 2. |
-| **0.0** | **[Vizanti Web Visualisation](https://github.com/MoffKalast/vizanti/tree/ros2)** | Planned integration of a web-based mission planner and 3D visualiser for remote operations. |
 
 
 ---
