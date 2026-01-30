@@ -5,7 +5,7 @@ from launch.actions import LogInfo
 from launch_ros.actions import Node
 
 # --- VERSIONING ---
-VERSION = "5.5-STABLE"
+VERSION = "5.6-STABLE-FLATTENED"
 
 def generate_launch_description():
     ld = LaunchDescription()
@@ -41,13 +41,14 @@ def generate_launch_description():
     ))
 
     # 3. Navigation Stack & Lifecycle Management
+    # Standardised to avoid 'local_costmap/local_costmap' nesting
     ld.add_action(Node(
         package='nav2_lifecycle_manager', executable='lifecycle_manager',
         name='lifecycle_manager_navigation', output='screen',
         parameters=[{
             'use_sim_time': is_sim,
             'autostart': True,
-            'node_names': ['controller_server', 'local_costmap']
+            'node_names': ['controller_server', 'local_costmap_node']
         }]
     ))
 
@@ -59,7 +60,7 @@ def generate_launch_description():
 
     ld.add_action(Node(
         package='nav2_costmap_2d', executable='nav2_costmap_2d',
-        name='local_costmap', # Removed redundant namespace for cleaner TF tree
+        name='local_costmap_node', 
         output='screen', 
         parameters=[{'use_sim_time': is_sim}]
     ))
@@ -86,11 +87,11 @@ def generate_launch_description():
                     'device': gps_port,
                     'baudrate': 460800,
                     'uart1.baudrate': 460800,
-                    'frame_id': 'gps',          # CRITICAL: Links data to the map
-                    'publish': {'nav': {'pvt': True}}, # Force position output
-                    'ubx': {'enabled': True},   # Force binary mode
-                    'meas_rate': 200,           # 5Hz updates
-                    'nav_rate': 1,              # Publish every measure
+                    'frame_id': 'gps',
+                    'publish': {'nav': {'pvt': True}},
+                    'ubx': {'enabled': True},
+                    'meas_rate': 200,
+                    'nav_rate': 1,
                     'tmode3': 0,
                     'config_on_startup': True
                 }

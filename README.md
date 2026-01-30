@@ -58,12 +58,12 @@ Ratings scale from 0.1 (Conceptual) to 1.0 (Production-Ready), with 0.0 indicati
 ### manage.py
 The primary entry point for the system. While it runs the full stack by default, it supports several optional arguments for development:
 
-| Argument | Behaviour / Implementation                                                                 |
-| :------- | :----------------------------------------------------------------------------------------- |
-| (None)   | Runs fixusb.py, then executes docker compose up -d to immediately start the stack.         |
-| build    | Executes docker compose build to compile the devkit images.                                |
-| down     | Executes docker compose down to stop and remove the containers and networks.               |
-
+| Command                  | Logic / Argument | Resulting Action                                                                 |
+|--------------------------|------------------|----------------------------------------------------------------------------------|
+| `./manage.py`            | (No arguments)   | Runs `run_runtime()` immediately using the existing image.                       |
+| `./manage.py build`      | `build`          | Runs `run_build(full=False)`. Re-compiles your code in seconds.                  |
+| `./manage.py full-build` | `full-build`     | Runs `run_build(full=True)`. Re-downloads ROS/MongoDB/Drivers (10+ mins).        |
+| `./manage.py stop`       | `stop` / `down`  | Force-kills the running container and cleans up the ROS 2 network state.         |
 
 
 ### Interactive Shell
@@ -76,7 +76,7 @@ If hardware is connected but topics are not flowing, run the diagnostic tool fro
 
 #### After running ./login.sh
 ```
-python3 src/agbot-diagnostic.py
+./agbot-diagnostic.py
 ```
 
 ![TUI Status.](https://raw.githubusercontent.com/Agroecology-Lab/Open_agbot_devkit_ros/refs/heads/main/assets/Screenshot%20From%202026-01-21%2018-07-45.png)
@@ -143,17 +143,6 @@ python3 src/agbot-diagnostic.py
 
 ![TUI Status.](https://raw.githubusercontent.com/Agroecology-Lab/Open_agbot_devkit_ros/refs/heads/main/assets/Screenshot%20From%202026-01-21%2020-37-03.png)
 
-
-
----
-
-## Project Structure
-
-* src/basekit_driver: ROS 2 node interfacing with the ESP32 MCU for battery status, bumpers, and odometry.
-* src/ublox: Driver suite for ZED-F9P RTK-GNSS modules.
-* src/basekit_launch: Centralized launch files to coordinate sensor fusion and driver startup.
-* src/basekit_ui: Web-based dashboard for real-time robot monitoring and control.
-* manage.py / firstrun.py: DevOps tooling for container and environment lifecycle.
 
 ---
 
