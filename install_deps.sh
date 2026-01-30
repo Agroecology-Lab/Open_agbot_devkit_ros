@@ -8,7 +8,7 @@ cd src
 
 # Clone NMEA messages (for GPS)
 if [ ! -d "nmea_msgs" ]; then
-    git https://github.com/ros-drivers/nmea_msgs.git -b ros2
+    git clone https://github.com/ros-drivers/nmea_msgs.git -b ros2
 else
     echo "nmea_msgs already exists, skipping..."
 fi
