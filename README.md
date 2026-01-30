@@ -4,19 +4,16 @@ An open-source, containerised ROS 2 stack for autonomous agricultural robotics. 
 
 Development is led by the <a href="https://agroecologylab.org.uk" target="_blank">Agroecology Lab </a> building on the core developed by <a href="https://github.com/zauberzeug/" target="_blank">Zauberzeug</a> 
 
-<<<<<<< HEAD
+
 (Latest work with Topological Nav is in the /dev branch, but under heavy development)
-=======
-Latest work is in the /dev branch. 
->>>>>>> da0d815 (docs: update README with /dev info)
----
+
 
 ## Quick Start
 
 ### 1. Clone the Repository
 Open a terminal on your host machine and download the workspace:
 ```
-git clone https://github.com/Agroecology-Lab/Open_agbot_devkit_ros.git
+git clone -b dev https://github.com/Agroecology-Lab/Open_agbot_devkit_ros.git
 cd Open_agbot_devkit_ros
 ```
 ### 2. Initialization
@@ -61,7 +58,7 @@ python3 src/agbot-diagnostic.py
 
 ![TUI Status.](https://raw.githubusercontent.com/Agroecology-Lab/Open_agbot_devkit_ros/refs/heads/main/assets/Screenshot%20From%202026-01-21%2018-07-45.png)
 
-### Dev branch topics
+### Dev branch Topic reference
 
 ● /BASEKIT_DRIVER_NODE
   ├─ Publishers: /battery_state: sensor_msgs/msg/BatteryState, /bumper_back_state: std_msgs/msg/Bool, /bumper_front_bottom_state: std_msgs/msg/Bool, /bumper_front_top_state: std_msgs/msg/Bool
@@ -117,13 +114,6 @@ python3 src/agbot-diagnostic.py
 
 
 
-
-
-
-
-
-
-
 ---
 
 ## Web User Interface
@@ -137,23 +127,20 @@ python3 src/agbot-diagnostic.py
 Ratings scale from 0.1 (Conceptual) to 1.0 (Production-Ready), with 0.0 indicating a planned or non-validated integration.
 
 
+### AgBot Development Status Matrix
+
 | Maturity | Feature | Description |
 | :--- | :--- | :--- |
-| **0.9** | **<a href="https://github.com/Agroecology-Lab/Open_agbot_devkit_ros" target="_blank">Containerized Deployment</a>** | Full ROS 2 Humble stack managed via Docker and the `manage.py` orchestration script. |
-| **0.7** | **<a href="https://github.com/KumarRobotics/ublox" target="_blank">KumarRobotics Ublox Driver</a>** | Industry-standard driver providing high-bandwidth UBX binary data and 
-| **0.6** | **<a href="https://github.com/Agroecology-Lab/Open_agbot_devkit_ros" target="_blank">Stable Device Addressing</a>** | Persistent symlinking via the `fixusb.py` utility to map hardware to `/dev/esp` and `/dev/gps`. |
-| **0.5** | **<a href="https://github.com/Agroecology-Lab/Open_agbot_devkit_ros" target="_blank">Environment-Driven Configuration</a>** | Host-agnostic architecture using dynamic environment variables within the launch system. |
-| **0.3** | **<a href="https://github.com/LCAS/sentor" target="_blank">Sentor Safety & Health Monitoring</a>** | Integrated hardware-software heartbeat and topic-based diagnostics to trigger automated recovery or emergency motor cut-off. |
-| **0.3** | **<a href="https://github.com/Agroecology-Lab/Open_agbot_devkit_ros" target="_blank">Dynamic Hardware Abstraction</a>** | Lizard firmware engine integration for real-time ESP32 configuration via the basekit driver. |
-| **0.4** | **<a href="https://github.com/Agroecology-Lab/Open_agbot_devkit_ros" target="_blank">Real-time Telemetry Dashboard</a>** | Web-based cockpit for monitoring battery and GPS health via the `basekit_ui` package. |
-| **0.5** | **<a href="https://github.com/Agroecology-Lab/Open_agbot_devkit_ros" target="_blank">Stable Device Addressing</a>** | Persistent symlinking via the `fixusb.py` utility to map hardware to `/dev/esp` and `/dev/gps`. |
-| **0.4** | **<a href="https://github.com/Agroecology-Lab/Open_agbot_devkit_ros" target="_blank">Environment-Driven Configuration</a>** | Host-agnostic architecture using dynamic environment variables within the launch system. |
-| **0.6** | **<a href="https://github.com/LCAS/sentor" target="_blank">Sentor Safety & Health Monitoring</a>** | Integrated hardware-software heartbeat and topic-based diagnostics to trigger automated recovery or emergency motor cut-off. |
-| **0.5** | **<a href="https://github.com/Agroecology-Lab/Open_agbot_devkit_ros" target="_blank">Dynamic Hardware Abstraction</a>** | Lizard firmware engine integration for real-time ESP32 configuration via the basekit driver. |
-| **0.5** | **<a href="https://github.com/Agroecology-Lab/Open_agbot_devkit_ros" target="_blank">Real-time Telemetry Dashboard</a>** | Web-based cockpit for monitoring battery and GPS health via the `basekit_ui` package. |
-| **0.1** | **<a href="https://github.com/LCAS/topological_navigation" target="_blank">Topological Navigation</a>** | Integration of the LCAS topological framework for graph-based semantic waypoint navigation. |
-| **0.0** | **<a href="https://github.com/Agroecology-Lab/visual-multi-crop-row-navigation/tree/ROS2" target="_blank">Visual Crop-Row Navigation</a>** | Vision-based guidance system for following crop rows; currently in porting status for ROS 2. |
-| **0.0** | **<a href="https://github.com/MoffKalast/vizanti/tree/ros2" target="_blank">Vizanti Web Visualization</a>** | Planned integration of a web-based mission planner and 3D visualizer for remote operations. |
+| **0.9** | **Containerised Deployment** | Full ROS 2 Humble stack managed via Docker and the `manage.py` orchestration script. |
+| **0.8** | **[KumarRobotics Ublox Driver](https://github.com/KumarRobotics/ublox)** | Modified driver providing high-bandwidth UBX binary data via a fail-safe "Lobotomy" boot sequence. |
+| **0.7** | **Stable Device Addressing** | Persistent symlinking via the `fixusb.py` utility to map hardware to `/dev/esp` and `/dev/gps`. |
+| **0.6** | **[Sentor Safety & Health Monitoring](https://github.com/LCAS/sentor)** | Integrated hardware-software heartbeat and topic-based diagnostics to trigger automated recovery or emergency motor cut-off. |
+| **0.5** | **Environment-Driven Configuration** | Host-agnostic architecture using dynamic environment variables within the launch system. |
+| **0.5** | **Dynamic Hardware Abstraction** | Lizard firmware engine integration for real-time ESP32 configuration via the basekit driver. |
+| **0.5** | **Real-time Telemetry Dashboard** | Web-based cockpit for monitoring battery and GPS health via the `basekit_ui` package. |
+| **0.1** | **[Topological Navigation](https://github.com/LCAS/topological_navigation)** | Integration of the LCAS topological framework for graph-based semantic waypoint navigation. |
+| **0.0** | **[Visual Crop-Row Navigation](https://github.com/Agroecology-Lab/visual-multi-crop-row-navigation/tree/ROS2)** | Vision-based guidance system for following crop rows; currently in porting status for ROS 2. |
+| **0.0** | **[Vizanti Web Visualisation](https://github.com/MoffKalast/vizanti/tree/ros2)** | Planned integration of a web-based mission planner and 3D visualiser for remote operations. |
 
 
 ---
@@ -170,31 +157,16 @@ Ratings scale from 0.1 (Conceptual) to 1.0 (Production-Ready), with 0.0 indicati
 
 ## Hardware Requirements
 
-The stack is pre-configured for the <a href="https://agroecologylab.co.uk" target="_blank">Agroecology Lab reference designs </a>
+The stack is pre-configured for the <a href="https://sowbot.co.uk" target="_blank">Sowbot reference designs </a>
 
 You may also have success with alternate platforms such as
 
 - Compute: Linux-based host (Avaota A1, Raspberry Pi, Jetson) running Docker.
 - MCU: ESP32 Control Board 
 - GPS: u-blox ZED-F9P 
-<<<<<<< HEAD
 - Communication: UART.
-=======
-- Communication: USB Serial (CDC).
->>>>>>> da0d815 (docs: update README with /dev info)
-- <a href="https://lizard.dev/module_reference/" target="_blank">Hardware & Motor drivers supported by Lizard </a>M
+- <a href="https://lizard.dev/module_reference/" target="_blank">Hardware & Motor drivers supported by Lizard </a>
 
----
-
-##  Topic Reference
-
-| Topic | Type | Description |
-| :--- | :--- | :--- |
-| /battery_state | sensor_msgs/BatteryState | Voltage and charge status |
-| /ublox_gps_node/fix | sensor_msgs/NavSatFix | Centimeter-level RTK global position |
-| /odom | nav_msgs/Odometry | Wheel encoder feedback and dead reckoning |
-| /cmd_vel | geometry_msgs/Twist | Velocity commands sent to the motor controllers |
-| /diagnostics | diagnostic_msgs/DiagnosticArray | Aggregated system health status |
 
 ---
 
