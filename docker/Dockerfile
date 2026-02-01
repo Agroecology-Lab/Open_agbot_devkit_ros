@@ -4,85 +4,95 @@
 FROM ros:humble-ros-base AS env-base
 
 ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONUNBUFFERED=1
 SHELL ["/bin/bash", "-c"]
 
-# 1. System Tools + ROS 2 Build-time & Runtime Deps
-# Added python3-serial and ros-humble-serial-driver for hardware communication
+# 1. Locale & Timezone (Stolen from the advanced file - prevents Python crashes)
+RUN apt-get update && apt-get install -y locales tzdata && \
+    locale-gen en_US.UTF-8 && \
+    update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8 && \
+    ln -fs /usr/share/zoneinfo/UTC /etc/localtime && \
+    dpkg-reconfigure --frontend noninteractive tzdata
+ENV LANG en_US.UTF-8
+
+# 2. Setup L-CAS Lincoln Repository & Core System Headers
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl gnupg2 ca-certificates libasio-dev libgeographic-dev && \
+    mkdir -p /usr/share/keyrings && \
+    curl -fsSL https://lcas.lincoln.ac.uk/apt/repo_signing.key | \
+    gpg --dearmor -o /usr/share/keyrings/lcas-keyring.gpg && \
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/lcas-keyring.gpg] https://lcas.lincoln.ac.uk/apt/lcas jammy lcas" > /etc/apt/sources.list.d/lcas.list
+
+    
+# 3. System Tools, Middleware, and Nav2 Stack
 RUN for i in {1..5}; do \
     apt-get update && \
-    apt-get install -y --fix-missing --no-install-recommends \
-    ca-certificates curl wget gnupg2 unzip git build-essential cmake \
-    python3-pip python3-setuptools python3-colcon-common-extensions \
-    python3-serial \
-    libunwind8 \
-    libasio-dev libgeographic-dev net-tools iputils-ping htop nano \
+    apt-get install -y --no-install-recommends \
+    wget unzip git build-essential cmake \
+    python3-pip python3-rosdep python3-setuptools python3-colcon-common-extensions \
+    net-tools \
     ros-humble-rmw-cyclonedds-cpp \
-    ros-humble-navigation2 ros-humble-nav2-bringup \
-    ros-humble-ublox-gps ros-humble-ublox-serialization ros-humble-ublox-msgs \
-    ros-humble-nmea-msgs ros-humble-diagnostic-msgs ros-humble-diagnostic-updater \
-    ros-humble-tf2-geometry-msgs ros-humble-tf-transformations \
-    ros-humble-laser-geometry ros-humble-pcl-conversions ros-humble-nav2-common \
-    ros-humble-twist-mux ros-humble-xacro ros-humble-ros2cli \
     ros-humble-rosbridge-suite \
-    ros-humble-serial-driver \
-    ros-humble-teleop-twist-keyboard && \
-    apt-get install -f -y && \
+    ros-humble-nav2-lifecycle-manager \
+    ros-humble-navigation2 \
+    ros-humble-nav2-bringup && \
     break || (sleep 10); \
     done
 
-# 2. MongoDB 6.0 Setup
-RUN apt-get update && apt-get install -f -y && \
-    curl -fsSL https://www.mongodb.org/static/pgp/server-6.0.asc | gpg --dearmor --yes -o /usr/share/keyrings/mongodb-server-6.0.gpg && \
-    echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-6.0.gpg ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/6.0 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-6.0.list && \
-    apt-get update && apt-get install -y mongodb-org-server mongodb-org-shell
+# 3.1. Automated Dependency Resolution
+WORKDIR /workspace
+COPY ./src ./src
+# We need to init rosdep if it's the first time in this layer
+RUN if [ ! -d /etc/ros/rosdep/sources.list.d ]; then rosdep init; fi && \
+    rosdep update && \
+    rosdep install --from-paths src --ignore-src -y \
+    --rosdistro humble \
+    --skip-keys "pyserial" && \
+    rm -rf /var/lib/apt/lists/*
 
-# 3. Python Dependencies
-# Added pyserial for direct MCU interaction scripts
-RUN pip3 install --no-cache-dir nicegui lizard transforms3d pymongo pyserial
+# 3.2. Pip Dependencies
+RUN pip3 install --no-cache-dir \
+    nicegui lizard transforms3d pymongo pyserial networkx
 
-# 4. Lizard Firmware Prep
+
+# 4. Automated Dependency Resolution (Added skip-keys for pyserial)
+WORKDIR /workspace
+COPY ./src ./src
+RUN rosdep update && \
+    rosdep install --from-paths src --ignore-src -y \
+    --rosdistro humble \
+    --skip-keys "pyserial" && \
+    rm -rf /var/lib/apt/lists/*
+
+# 5. Pip Dependencies (Specific non-ROS Python libs)
+RUN pip3 install --no-cache-dir \
+    nicegui lizard transforms3d pymongo pyserial networkx
+
+# 6. Lizard Firmware
 RUN mkdir -p /opt/lizard && cd /tmp && \
-    LATEST_TAG=$(curl -s https://api.github.com/repos/zauberzeug/lizard/releases/latest | grep -oP '"tag_name": "\K(.*)(?=")' || echo "v0.1.0") && \
-    wget -q -O lizard.zip "https://github.com/zauberzeug/lizard/releases/download/${LATEST_TAG}/lizard_firmware_and_devtools_${LATEST_TAG}_esp32.zip" && \
+    LATEST_TAG=$(curl -s https://api.github.com/repos/zauberzeug/lizard/releases/latest | grep -oP '"tag_name": "\K(.*)(?=")' || echo "v0.1.5") && \
+    curl -fsSL -o lizard.zip "https://github.com/zauberzeug/lizard/releases/download/${LATEST_TAG}/lizard_firmware_and_devtools_${LATEST_TAG}_esp32.zip" && \
     unzip -qo lizard.zip -d /opt/lizard && rm lizard.zip
 
 # ==========================================
-# STAGE 2: builder (Compilation Environment)
+# STAGE 2: builder
 # ==========================================
 FROM env-base AS builder
-WORKDIR /workspace
-
-COPY ./src ./src
 RUN . /opt/ros/humble/setup.sh && \
-    export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp && \
-    export CXXFLAGS="-Wno-error=unused-result" && \
-    colcon build --symlink-install --executor sequential --event-handlers console_direct+
+    colcon build --symlink-install --executor sequential
 
 # ==========================================
-# STAGE 3: runtime (The Final Target)
+# STAGE 3: runtime
 # ==========================================
 FROM env-base AS runtime
-WORKDIR /workspace
-
-# Fixed UndefinedVar warning by setting a clean base PYTHONPATH
-ENV RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
-ENV PYTHONPATH="/workspace/install/lib/python3.10/site-packages:/opt/ros/humble/lib/python3.10/site-packages"
-ENV LD_LIBRARY_PATH="/workspace/install/lib:/opt/ros/humble/lib:/usr/local/lib"
-
-# Transfer Build Artifacts
 COPY --from=builder /workspace/install /workspace/install
 COPY --from=builder /opt/lizard /opt/lizard
 
-# System Linker Update
-RUN echo "/workspace/install/lib" > /etc/ld.so.conf.d/agbot_final.conf && \
-    echo "/opt/ros/humble/lib" >> /etc/ld.so.conf.d/agbot_final.conf && \
-    ldconfig
+ENV RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+ENV PYTHONPATH="/workspace/install/lib/python3.10/site-packages:/opt/ros/humble/lib/python3.10/site-packages"
 
-# Quality of Life + Auto-Sourcing for interactive shells
 RUN echo "source /opt/ros/humble/setup.bash" >> /root/.bashrc && \
     echo "[ -f /workspace/install/setup.bash ] && source /workspace/install/setup.bash" >> /root/.bashrc
 
-# Robust Entrypoint: Only sources install/setup.bash if it actually exists
-# This prevents the crash during the manage.py build/sync phase
 ENTRYPOINT ["/bin/bash", "-c", "source /opt/ros/humble/setup.bash && [ -f /workspace/install/setup.bash ] && source /workspace/install/setup.bash; exec \"$@\"", "--"]
 CMD ["bash"]
