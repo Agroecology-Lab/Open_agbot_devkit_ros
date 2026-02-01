@@ -31,6 +31,8 @@
 #define UBLOX_GPS_NODE_HPP
 
 // STL
+#include <atomic>
+#include <chrono>
 #include <memory>
 #include <string>
 #include <vector>
@@ -88,6 +90,14 @@ class UbloxNode final : public rclcpp::Node {
   constexpr static double kKeepAlivePeriod = 10.0;
   //! How often (in seconds) to call poll messages
   constexpr static double kPollDuration = 1.0;
+  //! How often (in seconds) to check connection health
+  constexpr static double kWatchdogPeriod = 2.0;
+  //! Maximum reconnection attempts before giving up (0 = infinite)
+  constexpr static int kMaxReconnectAttempts = 0;
+  //! Base delay between reconnection attempts [ms]
+  constexpr static int kReconnectBaseDelayMs = 1000;
+  //! Maximum delay between reconnection attempts [ms]
+  constexpr static int kReconnectMaxDelayMs = 5000;
   // Constants used for diagnostic frequency updater
   //! [s] 5Hz diagnostic period
   const float kDiagnosticPeriod = 0.2;
@@ -204,6 +214,23 @@ class UbloxNode final : public rclcpp::Node {
   void pollMessages();
 
   /**
+   * @brief Handle I/O error from the GPS device (USB disconnect, etc.)
+   * @param error_msg the error message from the worker
+   */
+  void handleConnectionError(const std::string& error_msg);
+
+  /**
+   * @brief Attempt to reconnect to the GPS device.
+   */
+  void attemptReconnect();
+
+  /**
+   * @brief Check if the device port exists (for USB reconnection detection).
+   * @return true if the device file exists
+   */
+  bool isDevicePresent() const;
+
+  /**
    * @brief Configure INF messages, call after subscribe.
    */
   void configureInf();
@@ -299,6 +326,14 @@ class UbloxNode final : public rclcpp::Node {
 
   rclcpp::TimerBase::SharedPtr keep_alive_;
   rclcpp::TimerBase::SharedPtr poller_;
+
+  //! Watchdog timer for reconnection attempts
+  rclcpp::TimerBase::SharedPtr reconnect_timer_;
+
+  //! Connection state tracking
+  std::atomic<bool> connection_lost_{false};
+  std::atomic<int> reconnect_attempts_{0};
+  std::chrono::steady_clock::time_point last_reconnect_attempt_;
 };
 
 }  // namespace ublox_node

@@ -29,6 +29,7 @@
 #ifndef UBLOX_GPS_ASYNC_WORKER_HPP
 #define UBLOX_GPS_ASYNC_WORKER_HPP
 
+#include <atomic>
 #include <chrono>
 #include <condition_variable>
 #include <functional>
@@ -87,6 +88,12 @@ class AsyncWorker final : public Worker {
   void setRawDataCallback(const WorkerRawCallback& callback) override { raw_callback_ = callback; }
 
   /**
+   * @brief Set the callback function which handles I/O errors.
+   * @param callback the error callback which handles disconnection events
+   */
+  void setErrorCallback(const WorkerErrorCallback& callback) override { error_callback_ = callback; }
+
+  /**
    * @brief Send the data bytes via the I/O stream.
    * @param data the buffer of data bytes to send
    * @param size the size of the buffer
@@ -140,10 +147,14 @@ class AsyncWorker final : public Worker {
                                                        //!< service
   WorkerCallback read_callback_; //!< Callback function to handle received messages
   WorkerRawCallback raw_callback_; //!< Callback function to handle raw data
+  WorkerErrorCallback error_callback_; //!< Callback function to handle I/O errors
 
   bool stopping_; //!< Whether or not the I/O service is closed
 
   int debug_; //!< Used to determine which debug messages to display
+
+  std::atomic<int> consecutive_errors_{0}; //!< Count of consecutive read errors
+  static constexpr int kMaxConsecutiveErrors = 3; //!< Trigger reconnect after this many errors
 
   rclcpp::Logger logger_;
 };
@@ -280,10 +291,28 @@ void AsyncWorker<StreamT>::readEnd(const asio::error_code& error,
                                    std::size_t bytes_transferred) {
   std::lock_guard<std::mutex> lock(read_mutex_);
   if (error) {
-    RCLCPP_ERROR(logger_, "U-Blox ASIO input buffer read error: %s, %li",
-                 error.message().c_str(),
-                 bytes_transferred);
+    // Check for fatal disconnection errors (EOF, connection reset, etc.)
+    bool is_fatal = (error == asio::error::eof ||
+                     error == asio::error::connection_reset ||
+                     error == asio::error::broken_pipe ||
+                     error == asio::error::not_connected ||
+                     error == asio::error::bad_descriptor ||
+                     error == asio::error::operation_aborted);
+
+    int errors = ++consecutive_errors_;
+    RCLCPP_ERROR(logger_, "U-Blox ASIO input buffer read error: %s (consecutive: %d, fatal: %s)",
+                 error.message().c_str(), errors, is_fatal ? "yes" : "no");
+
+    // Notify error callback if we've hit the threshold or it's a fatal error
+    if ((errors >= kMaxConsecutiveErrors || is_fatal) && error_callback_ && !stopping_) {
+      stopping_ = true;  // Prevent further reads while reconnecting
+      error_callback_(error.message());
+      return;  // Don't repost read - let reconnection handler take over
+    }
   } else if (bytes_transferred > 0) {
+    // Reset error counter on successful read
+    consecutive_errors_ = 0;
+
     in_buffer_size_ += bytes_transferred;
 
     unsigned char *pRawDataStart = &(*(in_.begin() + (in_buffer_size_ - bytes_transferred)));
@@ -310,7 +339,15 @@ void AsyncWorker<StreamT>::readEnd(const asio::error_code& error,
 
     read_condition_.notify_all();
   } else {
-    RCLCPP_ERROR(logger_, "U-Blox ASIO transferred zero bytes");
+    // Zero bytes transferred - might indicate connection issue
+    int errors = ++consecutive_errors_;
+    RCLCPP_WARN(logger_, "U-Blox ASIO transferred zero bytes (consecutive issues: %d)", errors);
+
+    if (errors >= kMaxConsecutiveErrors && error_callback_ && !stopping_) {
+      stopping_ = true;
+      error_callback_("Zero bytes transferred repeatedly");
+      return;
+    }
   }
 
   if (!stopping_) {

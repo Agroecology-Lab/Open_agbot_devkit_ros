@@ -31,12 +31,14 @@
 #include <chrono>
 #include <cmath>
 #include <cstdlib>
+#include <filesystem>
 #include <functional>
 #include <memory>
 #include <regex>
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <thread>
 #include <vector>
 
 #include <rclcpp/rclcpp.hpp>
@@ -851,6 +853,9 @@ void UbloxNode::configureInf() {
 void UbloxNode::initializeIo() {
   gps_->setConfigOnStartup(getRosBoolean(this, "config_on_startup"));
 
+  // Set up error callback for automatic reconnection on USB disconnect
+  gps_->setErrorCallback(std::bind(&UbloxNode::handleConnectionError, this, std::placeholders::_1));
+
   std::smatch match;
   if (std::regex_match(device_, match,
                        std::regex("(tcp|udp)://(.+):(\\d+)"))) {
@@ -935,7 +940,129 @@ void UbloxNode::shutdown() {
 }
 
 UbloxNode::~UbloxNode() {
+  // Stop reconnection timer if running
+  if (reconnect_timer_) {
+    reconnect_timer_->cancel();
+  }
   shutdown();
+}
+
+bool UbloxNode::isDevicePresent() const {
+  // For serial devices, check if the device file exists
+  if (device_.substr(0, 4) == "/dev") {
+    return std::filesystem::exists(device_);
+  }
+  // For TCP/UDP, assume always present (network stack will handle errors)
+  return true;
+}
+
+void UbloxNode::handleConnectionError(const std::string& error_msg) {
+  if (connection_lost_) {
+    return;  // Already handling reconnection
+  }
+
+  connection_lost_ = true;
+  reconnect_attempts_ = 0;
+
+  RCLCPP_ERROR(this->get_logger(),
+               "GPS connection lost: %s. Starting automatic reconnection...", error_msg.c_str());
+
+  // Close the current connection
+  if (gps_->isInitialized()) {
+    gps_->close();
+  }
+
+  // Start the reconnection timer
+  reconnect_timer_ = this->create_wall_timer(
+      std::chrono::milliseconds(kReconnectBaseDelayMs),
+      std::bind(&UbloxNode::attemptReconnect, this));
+}
+
+void UbloxNode::attemptReconnect() {
+  // Check if device is present (for USB)
+  if (!isDevicePresent()) {
+    int attempts = ++reconnect_attempts_;
+    RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 5000,
+                         "GPS device %s not found. Waiting for reconnection... (attempt %d)",
+                         device_.c_str(), attempts);
+    return;
+  }
+
+  int attempts = ++reconnect_attempts_;
+
+  // Check if we've exceeded max attempts (if set)
+  if (kMaxReconnectAttempts > 0 && attempts > kMaxReconnectAttempts) {
+    RCLCPP_ERROR(this->get_logger(),
+                 "Max reconnection attempts (%d) exceeded. GPS node giving up.",
+                 kMaxReconnectAttempts);
+    reconnect_timer_->cancel();
+    return;
+  }
+
+  RCLCPP_INFO(this->get_logger(),
+              "Attempting GPS reconnection (attempt %d)...", attempts);
+
+  try {
+    // Re-initialize the I/O connection
+    std::smatch match;
+    if (std::regex_match(device_, match, std::regex("(tcp|udp)://(.+):(\\d+)"))) {
+      std::string proto(match[1]);
+      std::string host(match[2]);
+      std::string port(match[3]);
+      if (proto == "tcp") {
+        gps_->initializeTcp(host, port);
+      } else {
+        gps_->initializeUdp(host, port);
+      }
+    } else {
+      gps_->initializeSerial(device_, baudrate_, uart_in_, uart_out_);
+    }
+
+    // Verify we can communicate with the device
+    ublox_msgs::msg::MonVER monVer;
+    if (!gps_->poll(monVer)) {
+      throw std::runtime_error("Failed to poll MonVER after reconnection");
+    }
+
+    // Success! Stop the reconnection timer
+    reconnect_timer_->cancel();
+    connection_lost_ = false;
+    reconnect_attempts_ = 0;
+
+    RCLCPP_INFO(this->get_logger(),
+                "GPS reconnection successful! Device: %s, SW: %s",
+                device_.c_str(),
+                std::string(monVer.sw_version.begin(), monVer.sw_version.end()).c_str());
+
+    // Re-configure and re-subscribe
+    if (configureUblox()) {
+      subscribe();
+      configureInf();
+      RCLCPP_INFO(this->get_logger(), "GPS reconfigured successfully after reconnection.");
+    } else {
+      RCLCPP_WARN(this->get_logger(), "GPS reconnected but configuration failed. Basic operation may work.");
+    }
+
+  } catch (const std::exception& e) {
+    RCLCPP_WARN(this->get_logger(),
+                "GPS reconnection attempt %d failed: %s. Will retry...",
+                attempts, e.what());
+
+    // Close any partial connection
+    if (gps_->isInitialized()) {
+      gps_->close();
+    }
+
+    // Calculate backoff delay (exponential with cap)
+    int delay_ms = std::min(kReconnectBaseDelayMs * (1 << std::min(attempts - 1, 4)),
+                            kReconnectMaxDelayMs);
+
+    // Restart timer with new delay
+    reconnect_timer_->cancel();
+    reconnect_timer_ = this->create_wall_timer(
+        std::chrono::milliseconds(delay_ms),
+        std::bind(&UbloxNode::attemptReconnect, this));
+  }
 }
 
 }  // namespace ublox_node

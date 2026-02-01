@@ -47,6 +47,7 @@ class Worker {  // NOLINT(hicpp-special-member-functions, cppcoreguidelines-spec
  public:
   using WorkerCallback = std::function<size_t(unsigned char*, std::size_t)>;
   using WorkerRawCallback = std::function<void(unsigned char*, std::size_t)>;
+  using WorkerErrorCallback = std::function<void(const std::string&)>;
 
   virtual ~Worker() = default;
 
@@ -61,6 +62,12 @@ class Worker {  // NOLINT(hicpp-special-member-functions, cppcoreguidelines-spec
    * @param callback the write callback which handles raw data
    */
   virtual void setRawDataCallback(const WorkerRawCallback& callback) = 0;
+
+  /**
+   * @brief Set the callback function which handles I/O errors.
+   * @param callback the error callback which handles disconnection events
+   */
+  virtual void setErrorCallback(const WorkerErrorCallback& callback) = 0;
 
   /**
    * @brief Send the data in the buffer.
