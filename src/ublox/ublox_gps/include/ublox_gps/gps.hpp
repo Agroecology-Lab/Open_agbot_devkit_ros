@@ -429,6 +429,36 @@ class Gps final {
    */
   void setRawDataCallback(const Worker::WorkerRawCallback& callback);
 
+  /**
+   * @brief Set the callback function which handles I/O errors for reconnection.
+   * @param callback the error callback which handles disconnection events
+   */
+  void setErrorCallback(const Worker::WorkerErrorCallback& callback);
+
+  /**
+   * @brief Get the serial port path for reconnection.
+   * @return the device port string
+   */
+  std::string getPort() const { return port_; }
+
+  /**
+   * @brief Get the configured baudrate for reconnection.
+   * @return the baudrate
+   */
+  unsigned int getBaudrate() const { return baudrate_; }
+
+  /**
+   * @brief Get the UART input protocol mask for reconnection.
+   * @return the UART in protocol mask
+   */
+  uint16_t getUartIn() const { return uart_in_; }
+
+  /**
+   * @brief Get the UART output protocol mask for reconnection.
+   * @return the UART out protocol mask
+   */
+  uint16_t getUartOut() const { return uart_out_; }
+
  private:
   //! Types for ACK/NACK messages, WAIT is used when waiting for an ACK
   enum AckType {
@@ -506,6 +536,14 @@ class Gps final {
   CallbackHandlers callbacks_;
 
   std::string host_, port_;
+
+  //! Serial connection parameters for reconnection
+  unsigned int baudrate_{0};
+  uint16_t uart_in_{0};
+  uint16_t uart_out_{0};
+
+  //! Error callback for notifying node of disconnection
+  Worker::WorkerErrorCallback error_callback_;
 
   rclcpp::Logger logger_;
 };
