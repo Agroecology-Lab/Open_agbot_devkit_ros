@@ -66,6 +66,10 @@ void Gps::setWorker(const std::shared_ptr<Worker>& worker) {
   worker_->setCallback(std::bind(&CallbackHandlers::readCallback,
                                  &callbacks_, std::placeholders::_1,
                                  std::placeholders::_2));
+  // Set error callback if one has been registered (for reconnection support)
+  if (error_callback_) {
+    worker_->setErrorCallback(error_callback_);
+  }
   configured_ = static_cast<bool>(worker);
 }
 
@@ -128,7 +132,12 @@ void Gps::processUpdSosAck(const ublox_msgs::msg::UpdSOSAck &m) {
 
 void Gps::initializeSerial(const std::string & port, unsigned int baudrate,
                            uint16_t uart_in, uint16_t uart_out) {
+  // Store connection parameters for potential reconnection
   port_ = port;
+  baudrate_ = baudrate;
+  uart_in_ = uart_in;
+  uart_out_ = uart_out;
+
   auto io_service = std::make_shared<asio::io_service>();
   auto serial = std::make_shared<asio::serial_port>(*io_service);
 
@@ -633,6 +642,13 @@ void Gps::setRawDataCallback(const Worker::WorkerRawCallback& callback) {
     return;
   }
   worker_->setRawDataCallback(callback);
+}
+
+void Gps::setErrorCallback(const Worker::WorkerErrorCallback& callback) {
+  error_callback_ = callback;
+  if (worker_) {
+    worker_->setErrorCallback(callback);
+  }
 }
 
 bool Gps::setUTCtime() {
