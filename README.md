@@ -47,8 +47,10 @@ Ratings scale from 0.1 (Conceptual) to 1.0 (Production-Ready), with 0.0 indicati
 | **0.5** | **Real-time Telemetry & Teleop Dashboard** | Web-based cockpit for joystick control, monitoring battery and GPS health via the `basekit_ui` package. |
 | **0.3** | **[Topological Navigation](https://github.com/LCAS/topological_navigation)** | Integration of the LCAS topological framework for graph-based semantic waypoint navigation. |
 | **0.0** | **[Visual Crop-Row Navigation](https://github.com/Agroecology-Lab/visual-multi-crop-row-navigation/tree/ROS2)** | Vision-based guidance system for following crop rows; currently in porting status for ROS 2. |
-| **0.0** | **[Vizanti Web Visualisation](https://github.com/MoffKalast/vizanti/tree/ros2)** | Planned integration of a web-based mission planner and 3D visualiser for remote operations. |
-
+| **0.0** | **[Vizanti Web Visualisation](https://github.com/MoffKalast/vizanti/tree/ros2)** | Planned integration of a web-based mission planner and 3D visualiser for remote operations.|
+| **0.0** | **['Qwicc hitch for AgBots](https://manaculture.ca/en/a-frame-quick-hitch/)** | Develop & Test triangular qwick hitch system for AgBots  |
+| **0.0** | **[Delta robot module for precision sowing or weeding](https://github.com/Agroecology-Lab/Open-Weeding-Delta/tree/master/hardware#readme)** | Develop & Test Delta module |
+| **0.0** | **[L&ASER weeding module](https://github.com/Laudando-Associates-LLC/LASER)** | Intgrate and validate Laudando laser weeding on Sowbot |
 
 
 ---
@@ -91,83 +93,119 @@ You can also make it verbose with
 ### Dev branch Topic reference
 
 
+/agbot-diagnostic.py full
+
+═══════════════════════════════════════════════════════════════════════════
+🔎 VERBOSE ROS 2 GRAPH AUDIT 
+═══════════════════════════════════════════════════════════════════════════
+
 ● /BASEKIT_DRIVER_NODE
-  ├─ Publishers: /battery_state: sensor_msgs/msg/BatteryState, /bumper_back_state: std_msgs/msg/Bool, /bumper_front_bottom_state: std_msgs/msg/Bool, /bumper_front_top_state: std_msgs/msg/Bool
+  ├─ Subscribers : /cmd_vel: geometry_msgs/msg/Twist, /configure: std_msgs/msg/Empty, /emergency_stop: std_msgs/msg/Bool
+  └─ Publishers  : /battery_state: sensor_msgs/msg/BatteryState, /bumper_back_state: std_msgs/msg/Bool, /bumper_front_bottom_state: std_msgs/msg/Bool, /bumper_front_top_state: std_msgs/msg/Bool, /estop1_state: std_msgs/msg/Bool
 
 ● /BEHAVIOR_SERVER
-  ├─ Publishers: /behavior_server/transition_event: lifecycle_msgs/msg/TransitionEvent, /bond: bond/msg/Status, /cmd_vel: geometry_msgs/msg/Twist, /parameter_events: rcl_interfaces/msg/ParameterEvent
+  ├─ Subscribers : /bond: bond/msg/Status, /local_costmap/costmap_raw: nav2_msgs/msg/Costmap, /local_costmap/published_footprint: geometry_msgs/msg/PolygonStamped
+  └─ Publishers  : /behavior_server/transition_event: lifecycle_msgs/msg/TransitionEvent, /bond: bond/msg/Status, /cmd_vel: geometry_msgs/msg/Twist, /parameter_events: rcl_interfaces/msg/ParameterEvent, /rosout: rcl_interfaces/msg/Log
 
 ● /BT_NAVIGATOR
-  ├─ Publishers: /bond: bond/msg/Status, /bt_navigator/transition_event: lifecycle_msgs/msg/TransitionEvent, /parameter_events: rcl_interfaces/msg/ParameterEvent, /rosout: rcl_interfaces/msg/Log
+  ├─ Subscribers : /bond: bond/msg/Status, /goal_pose: geometry_msgs/msg/PoseStamped, /odom: nav_msgs/msg/Odometry, /tf: tf2_msgs/msg/TFMessage, /tf_static: tf2_msgs/msg/TFMessage
+  └─ Publishers  : /bond: bond/msg/Status, /bt_navigator/transition_event: lifecycle_msgs/msg/TransitionEvent, /parameter_events: rcl_interfaces/msg/ParameterEvent, /rosout: rcl_interfaces/msg/Log
 
 ● /BT_NAVIGATOR_NAVIGATE_THROUGH_POSES_RCLCPP_NODE
-  ├─ Publishers: /behavior_tree_log: nav2_msgs/msg/BehaviorTreeLog, /parameter_events: rcl_interfaces/msg/ParameterEvent, /rosout: rcl_interfaces/msg/Log
+  ├─ Subscribers : None (Filtered)
+  └─ Publishers  : /behavior_tree_log: nav2_msgs/msg/BehaviorTreeLog, /parameter_events: rcl_interfaces/msg/ParameterEvent, /rosout: rcl_interfaces/msg/Log
 
 ● /BT_NAVIGATOR_NAVIGATE_TO_POSE_RCLCPP_NODE
-  ├─ Publishers: /behavior_tree_log: nav2_msgs/msg/BehaviorTreeLog, /parameter_events: rcl_interfaces/msg/ParameterEvent, /rosout: rcl_interfaces/msg/Log
+  ├─ Subscribers : None (Filtered)
+  └─ Publishers  : /behavior_tree_log: nav2_msgs/msg/BehaviorTreeLog, /parameter_events: rcl_interfaces/msg/ParameterEvent, /rosout: rcl_interfaces/msg/Log
 
 ● /CONTROLLER_SERVER
-  ├─ Publishers: /bond: bond/msg/Status, /cmd_vel: geometry_msgs/msg/Twist, /controller_server/transition_event: lifecycle_msgs/msg/TransitionEvent, /cost_cloud: sensor_msgs/msg/PointCloud2
+  ├─ Subscribers : /bond: bond/msg/Status, /odom: nav_msgs/msg/Odometry, /speed_limit: nav2_msgs/msg/SpeedLimit
+  └─ Publishers  : /bond: bond/msg/Status, /cmd_vel: geometry_msgs/msg/Twist, /controller_server/transition_event: lifecycle_msgs/msg/TransitionEvent, /cost_cloud: sensor_msgs/msg/PointCloud2, /evaluation: dwb_msgs/msg/LocalPlanEvaluation
 
 ● /GLOBAL_COSTMAP/GLOBAL_COSTMAP
-  ├─ Publishers: /global_costmap/costmap: nav_msgs/msg/OccupancyGrid, /global_costmap/costmap_raw: nav2_msgs/msg/Costmap, /global_costmap/costmap_updates: map_msgs/msg/OccupancyGridUpdate, /global_costmap/global_costmap/transition_event: lifecycle_msgs/msg/TransitionEvent
+  ├─ Subscribers : /global_costmap/footprint: geometry_msgs/msg/Polygon, /map: nav_msgs/msg/OccupancyGrid
+  └─ Publishers  : /global_costmap/costmap: nav_msgs/msg/OccupancyGrid, /global_costmap/costmap_raw: nav2_msgs/msg/Costmap, /global_costmap/costmap_updates: map_msgs/msg/OccupancyGridUpdate, /global_costmap/global_costmap/transition_event: lifecycle_msgs/msg/TransitionEvent, /global_costmap/published_footprint: geometry_msgs/msg/PolygonStamped
 
 ● /LIFECYCLE_MANAGER_NAVIGATION
-  ├─ Publishers: /bond: bond/msg/Status, /diagnostics: diagnostic_msgs/msg/DiagnosticArray, /parameter_events: rcl_interfaces/msg/ParameterEvent, /rosout: rcl_interfaces/msg/Log
+  ├─ Subscribers : /bond: bond/msg/Status
+  └─ Publishers  : /bond: bond/msg/Status, /diagnostics: diagnostic_msgs/msg/DiagnosticArray, /parameter_events: rcl_interfaces/msg/ParameterEvent, /rosout: rcl_interfaces/msg/Log
 
 ● /LOCAL_COSTMAP/LOCAL_COSTMAP
-  ├─ Publishers: /local_costmap/costmap: nav_msgs/msg/OccupancyGrid, /local_costmap/costmap_raw: nav2_msgs/msg/Costmap, /local_costmap/costmap_updates: map_msgs/msg/OccupancyGridUpdate, /local_costmap/local_costmap/transition_event: lifecycle_msgs/msg/TransitionEvent
+  ├─ Subscribers : /local_costmap/footprint: geometry_msgs/msg/Polygon, /map: nav_msgs/msg/OccupancyGrid
+  └─ Publishers  : /local_costmap/costmap: nav_msgs/msg/OccupancyGrid, /local_costmap/costmap_raw: nav2_msgs/msg/Costmap, /local_costmap/costmap_updates: map_msgs/msg/OccupancyGridUpdate, /local_costmap/local_costmap/transition_event: lifecycle_msgs/msg/TransitionEvent, /local_costmap/published_footprint: geometry_msgs/msg/PolygonStamped
 
 ● /MAP_MANAGER
-  ├─ Publishers: /parameter_events: rcl_interfaces/msg/ParameterEvent, /rosout: rcl_interfaces/msg/Log, /tf: tf2_msgs/msg/TFMessage, /topological_map: topological_navigation_msgs/msg/TopologicalMap
+  ├─ Subscribers : None (Filtered)
+  └─ Publishers  : /parameter_events: rcl_interfaces/msg/ParameterEvent, /rosout: rcl_interfaces/msg/Log, /tf: tf2_msgs/msg/TFMessage, /topological_map: topological_navigation_msgs/msg/TopologicalMap, /topological_map_2: std_msgs/msg/String
 
 ● /MAP_SERVER
-  ├─ Publishers: /bond: bond/msg/Status, /map: nav_msgs/msg/OccupancyGrid, /map_server/transition_event: lifecycle_msgs/msg/TransitionEvent, /parameter_events: rcl_interfaces/msg/ParameterEvent
+  ├─ Subscribers : /bond: bond/msg/Status
+  └─ Publishers  : /bond: bond/msg/Status, /map: nav_msgs/msg/OccupancyGrid, /map_server/transition_event: lifecycle_msgs/msg/TransitionEvent, /parameter_events: rcl_interfaces/msg/ParameterEvent, /rosout: rcl_interfaces/msg/Log
 
 ● /NAVIGATION_EXECUTOR
-  ├─ Publishers: /boundary_checker: nav_msgs/msg/Path, /center_node/pose: geometry_msgs/msg/PoseStamped, /current_edge: std_msgs/msg/String, /parameter_events: rcl_interfaces/msg/ParameterEvent
+  ├─ Subscribers : /closest_edges: topological_navigation_msgs/msg/ClosestEdges, /closest_node: std_msgs/msg/String, /current_node: std_msgs/msg/String, /odometry/global: nav_msgs/msg/Odometry, /robot_navigation_area: std_msgs/msg/String
+  └─ Publishers  : /boundary_checker: nav_msgs/msg/Path, /center_node/pose: geometry_msgs/msg/PoseStamped, /current_edge: std_msgs/msg/String, /parameter_events: rcl_interfaces/msg/ParameterEvent, /robot_operation_current_status: std_msgs/msg/String
 
 ● /NAVIGATION_EXECUTOR
-  ├─ Publishers: /boundary_checker: nav_msgs/msg/Path, /center_node/pose: geometry_msgs/msg/PoseStamped, /current_edge: std_msgs/msg/String, /parameter_events: rcl_interfaces/msg/ParameterEvent
+  ├─ Subscribers : /closest_edges: topological_navigation_msgs/msg/ClosestEdges, /closest_node: std_msgs/msg/String, /current_node: std_msgs/msg/String, /odometry/global: nav_msgs/msg/Odometry, /robot_navigation_area: std_msgs/msg/String
+  └─ Publishers  : /boundary_checker: nav_msgs/msg/Path, /center_node/pose: geometry_msgs/msg/PoseStamped, /current_edge: std_msgs/msg/String, /parameter_events: rcl_interfaces/msg/ParameterEvent, /robot_operation_current_status: std_msgs/msg/String
 
 ● /NAVIGATION_EXECUTOR
-  ├─ Publishers: /boundary_checker: nav_msgs/msg/Path, /center_node/pose: geometry_msgs/msg/PoseStamped, /current_edge: std_msgs/msg/String, /parameter_events: rcl_interfaces/msg/ParameterEvent
+  ├─ Subscribers : /closest_edges: topological_navigation_msgs/msg/ClosestEdges, /closest_node: std_msgs/msg/String, /current_node: std_msgs/msg/String, /odometry/global: nav_msgs/msg/Odometry, /robot_navigation_area: std_msgs/msg/String
+  └─ Publishers  : /boundary_checker: nav_msgs/msg/Path, /center_node/pose: geometry_msgs/msg/PoseStamped, /current_edge: std_msgs/msg/String, /parameter_events: rcl_interfaces/msg/ParameterEvent, /robot_operation_current_status: std_msgs/msg/String
 
 ● /NAVIGATION_EXECUTOR
-  ├─ Publishers: /boundary_checker: nav_msgs/msg/Path, /center_node/pose: geometry_msgs/msg/PoseStamped, /current_edge: std_msgs/msg/String, /parameter_events: rcl_interfaces/msg/ParameterEvent
+  ├─ Subscribers : /closest_edges: topological_navigation_msgs/msg/ClosestEdges, /closest_node: std_msgs/msg/String, /current_node: std_msgs/msg/String, /odometry/global: nav_msgs/msg/Odometry, /robot_navigation_area: std_msgs/msg/String
+  └─ Publishers  : /boundary_checker: nav_msgs/msg/Path, /center_node/pose: geometry_msgs/msg/PoseStamped, /current_edge: std_msgs/msg/String, /parameter_events: rcl_interfaces/msg/ParameterEvent, /robot_operation_current_status: std_msgs/msg/String
 
 ● /NAVIGATION_EXECUTOR
-  ├─ Publishers: /boundary_checker: nav_msgs/msg/Path, /center_node/pose: geometry_msgs/msg/PoseStamped, /current_edge: std_msgs/msg/String, /parameter_events: rcl_interfaces/msg/ParameterEvent
+  ├─ Subscribers : /closest_edges: topological_navigation_msgs/msg/ClosestEdges, /closest_node: std_msgs/msg/String, /current_node: std_msgs/msg/String, /odometry/global: nav_msgs/msg/Odometry, /robot_navigation_area: std_msgs/msg/String
+  └─ Publishers  : /boundary_checker: nav_msgs/msg/Path, /center_node/pose: geometry_msgs/msg/PoseStamped, /current_edge: std_msgs/msg/String, /parameter_events: rcl_interfaces/msg/ParameterEvent, /robot_operation_current_status: std_msgs/msg/String
 
 ● /PLANNER_SERVER
-  ├─ Publishers: /bond: bond/msg/Status, /parameter_events: rcl_interfaces/msg/ParameterEvent, /plan: nav_msgs/msg/Path, /planner_server/transition_event: lifecycle_msgs/msg/TransitionEvent
+  ├─ Subscribers : /bond: bond/msg/Status
+  └─ Publishers  : /bond: bond/msg/Status, /parameter_events: rcl_interfaces/msg/ParameterEvent, /plan: nav_msgs/msg/Path, /planner_server/transition_event: lifecycle_msgs/msg/TransitionEvent, /rosout: rcl_interfaces/msg/Log
 
 ● /ROSBRIDGE_WEBSOCKET
-  ├─ Publishers: /client_count: std_msgs/msg/Int32, /connected_clients: rosbridge_msgs/msg/ConnectedClients, /parameter_events: rcl_interfaces/msg/ParameterEvent, /rosout: rcl_interfaces/msg/Log
+  ├─ Subscribers : None (Filtered)
+  └─ Publishers  : /client_count: std_msgs/msg/Int32, /connected_clients: rosbridge_msgs/msg/ConnectedClients, /parameter_events: rcl_interfaces/msg/ParameterEvent, /rosout: rcl_interfaces/msg/Log
 
 ● /STATIC_MAP_TO_ODOM
-  ├─ Publishers: /parameter_events: rcl_interfaces/msg/ParameterEvent, /rosout: rcl_interfaces/msg/Log, /tf_static: tf2_msgs/msg/TFMessage
+  ├─ Subscribers : None (Filtered)
+  └─ Publishers  : /parameter_events: rcl_interfaces/msg/ParameterEvent, /rosout: rcl_interfaces/msg/Log, /tf_static: tf2_msgs/msg/TFMessage
+
+● /STATIC_MAP_TO_TOPOLOGICAL
+  ├─ Subscribers : None (Filtered)
+  └─ Publishers  : /parameter_events: rcl_interfaces/msg/ParameterEvent, /rosout: rcl_interfaces/msg/Log, /tf_static: tf2_msgs/msg/TFMessage
 
 ● /STATIC_ODOM_TO_BASE
-  ├─ Publishers: /parameter_events: rcl_interfaces/msg/ParameterEvent, /rosout: rcl_interfaces/msg/Log, /tf_static: tf2_msgs/msg/TFMessage
+  ├─ Subscribers : None (Filtered)
+  └─ Publishers  : /parameter_events: rcl_interfaces/msg/ParameterEvent, /rosout: rcl_interfaces/msg/Log, /tf_static: tf2_msgs/msg/TFMessage
 
 ● /TOPOLOGICAL_LOCALISATION
-  ├─ Publishers: /closest_edges: topological_navigation_msgs/msg/ClosestEdges, /closest_node: std_msgs/msg/String, /closest_node_distance: std_msgs/msg/Float32, /current_node: std_msgs/msg/String
+  ├─ Subscribers : /tf: tf2_msgs/msg/TFMessage, /tf_static: tf2_msgs/msg/TFMessage, /topological_map_2: std_msgs/msg/String
+  └─ Publishers  : /closest_edges: topological_navigation_msgs/msg/ClosestEdges, /closest_node: std_msgs/msg/String, /closest_node_distance: std_msgs/msg/Float32, /current_node: std_msgs/msg/String, /current_node/tag: std_msgs/msg/String
 
-● /TRANSFORM_LISTENER_IMPL_5909EBFC1970
-  ├─ Publishers: /rosout: rcl_interfaces/msg/Log
+● /TRANSFORM_LISTENER_IMPL_5E90D67395B0
+  ├─ Subscribers : /tf: tf2_msgs/msg/TFMessage, /tf_static: tf2_msgs/msg/TFMessage
+  └─ Publishers  : /rosout: rcl_interfaces/msg/Log
 
-● /TRANSFORM_LISTENER_IMPL_5EA934DEBA90
-  ├─ Publishers: /rosout: rcl_interfaces/msg/Log
+● /TRANSFORM_LISTENER_IMPL_76FCA0004C30
+  ├─ Subscribers : /tf: tf2_msgs/msg/TFMessage, /tf_static: tf2_msgs/msg/TFMessage
+  └─ Publishers  : /rosout: rcl_interfaces/msg/Log
 
-● /TRANSFORM_LISTENER_IMPL_743C40006D20
-  ├─ Publishers: /rosout: rcl_interfaces/msg/Log
+● /TRANSFORM_LISTENER_IMPL_7B6380002FA0
+  ├─ Subscribers : /tf: tf2_msgs/msg/TFMessage, /tf_static: tf2_msgs/msg/TFMessage
+  └─ Publishers  : /rosout: rcl_interfaces/msg/Log
 
 ● /UBLOX_GPS_NODE
-  ├─ Publishers: /diagnostics: diagnostic_msgs/msg/DiagnosticArray, /nmea: nmea_msgs/msg/Sentence, /parameter_events: rcl_interfaces/msg/ParameterEvent, /rosout: rcl_interfaces/msg/Log
+  ├─ Subscribers : /rtcm: rtcm_msgs/msg/Message
+  └─ Publishers  : /diagnostics: diagnostic_msgs/msg/DiagnosticArray, /nmea: nmea_msgs/msg/Sentence, /parameter_events: rcl_interfaces/msg/ParameterEvent, /rosout: rcl_interfaces/msg/Log, /ublox_gps_node/fix: sensor_msgs/msg/NavSatFix
 
 ● /WEB_UI
-  ├─ Publishers: /cmd_vel: geometry_msgs/msg/Twist, /emergency_stop: std_msgs/msg/Bool, /parameter_events: rcl_interfaces/msg/ParameterEvent, /rosout: rcl_interfaces/msg/Log
+  ├─ Subscribers : /battery_state: sensor_msgs/msg/BatteryState, /cmd_vel: geometry_msgs/msg/Twist, /estop1_state: std_msgs/msg/Bool, /ublox_gps_node/fix: sensor_msgs/msg/NavSatFix
+  └─ Publishers  : /cmd_vel: geometry_msgs/msg/Twist, /emergency_stop: std_msgs/msg/Bool, /parameter_events: rcl_interfaces/msg/ParameterEvent, /rosout: rcl_interfaces/msg/Log
 
 
 ---
@@ -185,7 +223,7 @@ The stack is pre-configured for the <a href="https://sowbot.co.uk" target="_blan
 
 You may also have success with alternate platforms such as
 
-- Compute: Linux-based host (Avaota A1, Raspberry Pi, Jetson) running Docker.
+- Compute: Linux-based hosts (Avaota A1, Raspberry Pi, Jetson) running Docker.
 - MCU: ESP32 Control Board 
 - GPS: u-blox ZED-F9P 
 - Communication: UART.
