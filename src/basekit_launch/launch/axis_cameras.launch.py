@@ -11,13 +11,13 @@ from launch_ros.actions import Node
 def generate_launch_description():
     """Generate launch description for AXIS cameras."""
 
-    basekit_launch_dir = get_package_share_directory('basekit_launch')
-    axis_config = os.path.join(basekit_launch_dir, 'config', 'axis_camera.yaml')
-    secrets_file = os.path.join(basekit_launch_dir, 'config', 'secrets.yaml')
+    devkit_launch_dir = get_package_share_directory('devkit_launch')
+    axis_config = os.path.join(devkit_launch_dir, 'config', 'axis_camera.yaml')
+    secrets_file = os.path.join(devkit_launch_dir, 'config', 'secrets.yaml')
 
     # Load secrets
     try:
-        with open(secrets_file) as f:
+        with open(secrets_file, encoding='utf-8') as f:
             secrets = yaml.safe_load(f)
             username = secrets['axis_cameras']['username']
             password = secrets['axis_cameras']['password']

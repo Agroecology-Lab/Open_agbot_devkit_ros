@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-package_name = 'basekit_driver'
+package_name = 'devkit_driver'
 
 setup(
     name=package_name,
@@ -13,14 +13,21 @@ setup(
     ],
     install_requires=['setuptools'],
     zip_safe=True,
+<<<<<<<< HEAD:src/basekit_driver/setup.py
     maintainer='Agroecology Lab',
     maintainer_email='lab@agroecology.org',
     description='Driver for Open Agbot basekit hardware',
     license='Apache License 2.0',
+========
+    maintainer='Zauberzeug GmbH',
+    maintainer_email='ros@zauberzeug.com',
+    description='ROS2 setup for the Feldfreund DevKit',
+    license='MIT License',
+>>>>>>>> upstream_main/main:devkit_driver/setup.py
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'basekit_driver_node = basekit_driver.basekit_driver_node:main'
+            'devkit_driver_node = devkit_driver.devkit_driver_node:main'
         ],
     },
 )

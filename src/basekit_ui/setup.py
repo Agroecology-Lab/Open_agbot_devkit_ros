@@ -1,6 +1,6 @@
 from setuptools import setup
 
-package_name = 'basekit_ui'
+package_name = 'devkit_ui'
 
 setup(
     name=package_name,
@@ -20,7 +20,11 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+<<<<<<<< HEAD:src/basekit_ui/setup.py
             'basekit_ui_node = basekit_ui.basekit_ui_node:main'
+========
+            'ui_node = devkit_ui.ui_node:main',
+>>>>>>>> upstream_main/main:devkit_ui/setup.py
         ],
     },
 )

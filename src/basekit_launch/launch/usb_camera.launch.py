@@ -12,7 +12,7 @@ def generate_launch_description():
 
     # Get the configuration file path
     config_file = os.path.join(
-        get_package_share_directory('basekit_launch'),
+        get_package_share_directory('devkit_launch'),
         'config',
         'camera.yaml'
     )
@@ -25,8 +25,8 @@ def generate_launch_description():
             name='usb_cam',
             parameters=[config_file],
             remappings=[
-                ('image_raw', '/basekit/camera/image_raw'),
-                ('camera_info', '/basekit/camera/camera_info'),
+                ('image_raw', '/devkit/camera/image_raw'),
+                ('camera_info', '/devkit/camera/camera_info'),
             ]
         ),
     ])

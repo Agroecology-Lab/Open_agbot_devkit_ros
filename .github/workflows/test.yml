@@ -7,14 +7,9 @@ jobs:
     strategy:
       matrix:
         tools:
-          - command: "mypy ./basekit_driver --non-interactive"
-          - command: "mypy ./basekit_launch --non-interactive"
-          - command: "mypy ./basekit_ui --non-interactive"
-          - command: "pylint ./basekit_driver/basekit_driver"
-          - command: "pylint ./basekit_ui/basekit_ui"
-          - command: "ruff check ./basekit_driver"
-          - command: "ruff check ./basekit_launch"
-          - command: "ruff check ./basekit_ui"
+          - command: "make mypy"
+          - command: "make pylint"
+          - command: "make ruff"
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
