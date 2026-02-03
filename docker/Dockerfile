@@ -1,20 +1,20 @@
-FROM ros:humble
+FROM ros:jazzy
 
 RUN apt-get update && apt-get install -y \
-        ros-humble-domain-bridge \
-        ros-humble-rmw-cyclonedds-cpp \
-        ros-humble-foxglove-bridge \
-        ros-humble-xacro \
-        ros-humble-rosbag2-storage-mcap \
-        ros-humble-foxglove-msgs \
-        ros-humble-tf-transformations \
-        ros-humble-septentrio-gnss-driver \
-        ros-humble-usb-cam \
-        ros-humble-image-transport \
-        ros-humble-image-transport-plugins \
-        ros-humble-image-tools \
-        ros-humble-compressed-image-transport \
-        ros-humble-axis-camera \
+        ros-jazzy-domain-bridge \
+        ros-jazzy-rmw-cyclonedds-cpp \
+        ros-jazzy-foxglove-bridge \
+        ros-jazzy-xacro \
+        ros-jazzy-rosbag2-storage-mcap \
+        ros-jazzy-foxglove-msgs \
+        ros-jazzy-tf-transformations \
+        ros-jazzy-septentrio-gnss-driver \
+        ros-jazzy-usb-cam \
+        ros-jazzy-image-transport \
+        ros-jazzy-image-transport-plugins \
+        ros-jazzy-image-tools \
+        ros-jazzy-compressed-image-transport \
+        ros-jazzy-axis-camera \
         python3-pip \
         python3-serial \
         python3-requests \
@@ -28,30 +28,32 @@ RUN apt-get update && apt-get install -y \
 # Setup lizard
 RUN mkdir -p /root/.lizard && \
     cd /root && \
-    LATEST_VERSION=$(curl -s https://api.github.com/repos/zauberzeug/lizard/releases/latest | grep -oP '"tag_name": "\K(.*)(?=")') && \
-    wget https://github.com/zauberzeug/lizard/releases/download/${LATEST_VERSION}/lizard_firmware_and_devtools_${LATEST_VERSION}.zip && \
-    unzip lizard_firmware_and_devtools_${LATEST_VERSION}.zip -d /root/.lizard && \
+    LIZARD_VERSION=v0.9.0 && \
+    wget https://github.com/zauberzeug/lizard/releases/download/${LIZARD_VERSION}/lizard_firmware_and_devtools_${LIZARD_VERSION}_esp32.zip && \
+    unzip lizard_firmware_and_devtools_${LIZARD_VERSION}_esp32.zip -d /root/.lizard && \
     chmod +x /root/.lizard/espresso.py && \
     cd /root/.lizard && \
-    pip install -r requirements.txt && \
+    pip install --break-system-packages --ignore-installed -r requirements.txt && \
     cd /root && \
-    rm -f lizard_firmware_and_devtools_${LATEST_VERSION}.zip && \
+    rm -f lizard_firmware_and_devtools_${LIZARD_VERSION}_esp32.zip && \
     echo "export PYTHONPATH=/root/.lizard:$PYTHONPATH" >> /root/.bashrc
 
-RUN pip install -r requirements-dev.txt
+COPY requirements.txt /tmp/requirements.txt
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --break-system-packages --ignore-installed -r /tmp/requirements.txt
 
 COPY ./docker/bashrc /tmp/bashrc
 RUN cat /tmp/bashrc >> /root/.bashrc && rm -f /tmp/bashrc
 
 # Copy ROS packages
-COPY ./basekit_driver /workspace/src/basekit_driver
-COPY ./basekit_launch /workspace/src/basekit_launch
-COPY ./basekit_ui /workspace/src/basekit_ui
+COPY ./devkit_driver /workspace/src/devkit_driver
+COPY ./devkit_launch /workspace/src/devkit_launch
+COPY ./devkit_ui /workspace/src/devkit_ui
 
 # Build ROS packages
 WORKDIR /workspace
-RUN . /opt/ros/humble/setup.sh && \
-    colcon build --packages-select basekit_driver basekit_launch basekit_ui --symlink-install && \
+RUN . /opt/ros/jazzy/setup.sh && \
+    colcon build --packages-select devkit_driver devkit_launch devkit_ui --symlink-install && \
     . install/setup.sh
 
 WORKDIR /workspace
