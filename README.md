@@ -86,26 +86,7 @@ python3 src/agbot-diagnostic.py
 ---
 ## Roadmap
 
-Ratings scale from 0.1 (Conceptual) to 1.0 (Production-Ready), with 0.0 indicating a planned or non-validated integration.
-
-
-| Maturity | Feature | Description |
-| :--- | :--- | :--- |
-| **0.9** | **<a href="https://github.com/Agroecology-Lab/Open_agbot_devkit_ros" target="_blank">Containerized Deployment</a>** | Full ROS 2 Humble stack managed via Docker and the `manage.py` orchestration script. |
-| **0.7** | **<a href="https://github.com/KumarRobotics/ublox" target="_blank">KumarRobotics Ublox Driver</a>** | Industry-standard driver providing high-bandwidth UBX binary data and 
-| **0.6** | **<a href="https://github.com/Agroecology-Lab/Open_agbot_devkit_ros" target="_blank">Stable Device Addressing</a>** | Persistent symlinking via the `fixusb.py` utility to map hardware to `/dev/esp` and `/dev/gps`. |
-| **0.5** | **<a href="https://github.com/Agroecology-Lab/Open_agbot_devkit_ros" target="_blank">Environment-Driven Configuration</a>** | Host-agnostic architecture using dynamic environment variables within the launch system. |
-| **0.3** | **<a href="https://github.com/LCAS/sentor" target="_blank">Sentor Safety & Health Monitoring</a>** | Integrated hardware-software heartbeat and topic-based diagnostics to trigger automated recovery or emergency motor cut-off. |
-| **0.3** | **<a href="https://github.com/Agroecology-Lab/Open_agbot_devkit_ros" target="_blank">Dynamic Hardware Abstraction</a>** | Lizard firmware engine integration for real-time ESP32 configuration via the basekit driver. |
-| **0.4** | **<a href="https://github.com/Agroecology-Lab/Open_agbot_devkit_ros" target="_blank">Real-time Telemetry Dashboard</a>** | Web-based cockpit for monitoring battery and GPS health via the `basekit_ui` package. |
-| **0.5** | **<a href="https://github.com/Agroecology-Lab/Open_agbot_devkit_ros" target="_blank">Stable Device Addressing</a>** | Persistent symlinking via the `fixusb.py` utility to map hardware to `/dev/esp` and `/dev/gps`. |
-| **0.4** | **<a href="https://github.com/Agroecology-Lab/Open_agbot_devkit_ros" target="_blank">Environment-Driven Configuration</a>** | Host-agnostic architecture using dynamic environment variables within the launch system. |
-| **0.6** | **<a href="https://github.com/LCAS/sentor" target="_blank">Sentor Safety & Health Monitoring</a>** | Integrated hardware-software heartbeat and topic-based diagnostics to trigger automated recovery or emergency motor cut-off. |
-| **0.5** | **<a href="https://github.com/Agroecology-Lab/Open_agbot_devkit_ros" target="_blank">Dynamic Hardware Abstraction</a>** | Lizard firmware engine integration for real-time ESP32 configuration via the basekit driver. |
-| **0.5** | **<a href="https://github.com/Agroecology-Lab/Open_agbot_devkit_ros" target="_blank">Real-time Telemetry Dashboard</a>** | Web-based cockpit for monitoring battery and GPS health via the `basekit_ui` package. |
-| **0.1** | **<a href="https://github.com/LCAS/topological_navigation" target="_blank">Topological Navigation</a>** | Integration of the LCAS topological framework for graph-based semantic waypoint navigation. |
-| **0.0** | **<a href="https://github.com/Agroecology-Lab/visual-multi-crop-row-navigation/tree/ROS2" target="_blank">Visual Crop-Row Navigation</a>** | Vision-based guidance system for following crop rows; currently in porting status for ROS 2. |
-| **0.0** | **<a href="https://github.com/MoffKalast/vizanti/tree/ros2" target="_blank">Vizanti Web Visualization</a>** | Planned integration of a web-based mission planner and 3D visualizer for remote operations. |
+Check new roadmap here https://github.com/Agroecology-Lab/feldfreund_devkit_ros/tree/sowbot?tab=readme-ov-file#sowbot-roadmap
 
 
 ---
